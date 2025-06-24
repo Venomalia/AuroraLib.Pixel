@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuroraLib.Pixel.BitmapExten
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuroraLib.Pixel.ImageSharpExtension", "src\AuroraLib.Pixel.ImageSharpExtension\AuroraLib.Pixel.ImageSharpExtension.csproj", "{90FFFD2F-6DCA-43F2-94EC-7D34647B3446}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuroraLib.Pixel.SkiaSharpExtension", "src\AuroraLib.Pixel.SkiaSharpExtension\AuroraLib.Pixel.SkiaSharpExtension.csproj", "{D07EDF6B-9CFE-45F8-A7AE-1B3257CF22CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,6 +44,12 @@ Global
 		{90FFFD2F-6DCA-43F2-94EC-7D34647B3446}.Optimized|Any CPU.Build.0 = Optimized|Any CPU
 		{90FFFD2F-6DCA-43F2-94EC-7D34647B3446}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90FFFD2F-6DCA-43F2-94EC-7D34647B3446}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D07EDF6B-9CFE-45F8-A7AE-1B3257CF22CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D07EDF6B-9CFE-45F8-A7AE-1B3257CF22CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D07EDF6B-9CFE-45F8-A7AE-1B3257CF22CF}.Optimized|Any CPU.ActiveCfg = Debug|Any CPU
+		{D07EDF6B-9CFE-45F8-A7AE-1B3257CF22CF}.Optimized|Any CPU.Build.0 = Debug|Any CPU
+		{D07EDF6B-9CFE-45F8-A7AE-1B3257CF22CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D07EDF6B-9CFE-45F8-A7AE-1B3257CF22CF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

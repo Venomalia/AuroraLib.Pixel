@@ -7,11 +7,13 @@ namespace AuroraLib.Pixel.PixelFormats
         public static readonly float ByteMaxF = byte.MaxValue;
         public static readonly float UshortMaxF = ushort.MaxValue;
 
+        public static byte Expand2BitTo8Bit(int value) => (byte)((value & 0b11) * 85);
         public static byte Expand3BitTo8Bit(int value) => (byte)(value << 5 | value << 2 | value >> 1);
         public static byte Expand4BitTo8Bit(int value) => (byte)(value << 4 | value);
         public static byte Expand5BitTo8Bit(int value) => (byte)(value << 3 | value >> 2);
         public static byte Expand6BitTo8Bit(int value) => (byte)(value << 2 | value >> 4);
         public static ushort Expand8BitTo16Bit(byte value) => (ushort)(value << 8 | value);
+        public static ushort Expand10BitTo16Bit(ushort value) => (ushort)((value << 6) | (value >> 4));
         public static uint Expand8BitTo32Bit(byte value) => (uint)(value << 24 | value << 16 | value << 8 | value);
         public static uint Expand16BitTo32Bit(ushort value) => (uint)(value << 16 | value);
 

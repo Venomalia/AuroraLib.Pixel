@@ -12,3 +12,5 @@ It enables seamless conversion and manipulation across a broad range of pixel fo
 ### AuroraLib.Pixel.ImageSharpExtension
 [![NuGet Package ImageSharpExtension](https://img.shields.io/nuget/v/AuroraLib.Pixel.ImageSharpExtension.svg?style=flat-square&label=NuGet%20Package)](https://www.nuget.org/packages/AuroraLib.Pixel.ImageSharpExtension)
 
+###  AuroraLib.Pixel.SkiaSharpExtension 
+[![NuGet Package SkiaSharpExtension](https://img.shields.io/nuget/v/AuroraLib.Pixel.SkiaSharpExtension.svg?style=flat-square&label=NuGet%20Package)](https://www.nuget.org/packages/AuroraLib.Pixel.SkiaSharpExtension)

@@ -19,7 +19,7 @@ namespace AuroraLib.Pixel.ImageSharpExtension
         /// <returns>The <see cref="IImage"/> when successful.</returns>
         public static Pixel.Image.IImage AsAuroraImage(this SixLabors.ImageSharp.Image image)
         {
-            if (TryAsAuroraImage(image,out Pixel.Image.IImage memoryImage))
+            if (TryAsAuroraImage(image, out Pixel.Image.IImage memoryImage))
             {
                 return memoryImage;
             }
@@ -70,6 +70,9 @@ namespace AuroraLib.Pixel.ImageSharpExtension
                 Type t when t == typeof(La32) => TryAsAuroraImage<IA32>(image, out memoryImage),
                 Type t when t == typeof(Rgb24) => TryAsAuroraImage<RGB24>(image, out memoryImage),
                 Type t when t == typeof(Rgb48) => TryAsAuroraImage<RGB48>(image, out memoryImage),
+                Type t when t == typeof(HalfVector4) => TryAsAuroraImage<RGBAf16>(image, out memoryImage),
+                Type t when t == typeof(RgbaVector) => TryAsAuroraImage<RGBAf32>(image, out memoryImage),
+                Type t when t == typeof(Rgba1010102) => TryAsAuroraImage<RGB48>(image, out memoryImage),
                 Type t when t == typeof(Rgba32) => TryAsAuroraImage<RGBA32>(image, out memoryImage),
                 Type t when t == typeof(Rgba64) => TryAsAuroraImage<RGBA64>(image, out memoryImage),
                 _ => false,

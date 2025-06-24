@@ -1,0 +1,55 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<AssemblyTitle>AuroraLib.Pixel.SkiaSharpExtension</AssemblyTitle>
+		<TargetFrameworks>net8.0;net6.0;netstandard2.0;net472;</TargetFrameworks>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Title>AuroraLib.Pixel.SkiaSharpExtension</Title>
+		<Version>1.1.0</Version>
+		<AssemblyVersion>$(Version)</AssemblyVersion>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+		<Authors>Venomalia</Authors>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<PackageProjectUrl>https://github.com/Venomalia/AuroraLib.Pixel</PackageProjectUrl>
+		<PackageIcon>icon.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<Configurations>Debug;Release;Optimized</Configurations>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<NETFrameworks>|netstandard2.0|net481|net48|net472|NET471|NET47|NET462|NET461|</NETFrameworks>
+		<NET>|net8.0|net7.0|net6.0|net5.0|</NET>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(NETFrameworks.Contains('|$(TargetFramework)|'))">
+		<LangVersion>8.0</LangVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\..\icon.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Include="..\..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(Configuration)' == 'Release'">
+		<PackageReference Include="AuroraLib.Pixel" Version="1.1.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(Configuration)' != 'Release'">
+		<ProjectReference Include="..\AuroraLib.Pixel\AuroraLib.Pixel.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="SkiaSharp" Version="3.119.0" />
+	</ItemGroup>
+
+</Project>

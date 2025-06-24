@@ -287,7 +287,7 @@ namespace PixelTest
             int size = Marshal.SizeOf(pixel.GetType());
             Assert.AreEqual(size, (formatInfo.BitsPerPixel + 7) / 8);
 
-            if (formatInfo.HasDynamicChannel)
+            if (formatInfo.HasDynamicChannel || IsFloat(pixel))
                 return;
 
             if (isGrayscale)
@@ -327,12 +327,18 @@ namespace PixelTest
             }
         }
 
+        private static bool IsFloat(IColor pixel)
+            => typeof(IAlpha<Half>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<float>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<Half>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<float>).IsAssignableFrom(pixel.GetType());
+
         private static bool HasAlpha(IColor pixel)
-            => typeof(IAlpha<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<uint>).IsAssignableFrom(pixel.GetType());
+            => typeof(IAlpha<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<uint>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<float>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<Half>).IsAssignableFrom(pixel.GetType());
+
         private static bool IsIntensity(IColor pixel)
             => typeof(IIntensity<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<uint>).IsAssignableFrom(pixel.GetType());
+
         private static bool IsRGB(IColor pixel)
-            => typeof(IRGB<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<uint>).IsAssignableFrom(pixel.GetType());
+            => typeof(IRGB<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<uint>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<float>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<Half>).IsAssignableFrom(pixel.GetType());
+
         private static bool IsGrayscale(IColor pixel)
             => !IsRGB(pixel);
         private static bool HasColor(IColor pixel)

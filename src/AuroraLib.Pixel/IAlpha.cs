@@ -12,10 +12,7 @@ namespace AuroraLib.Pixel
         float A { get; set; }
     }
 
-    public interface IAlpha<TValue> : IAlpha where TValue : unmanaged, IEquatable<TValue>, IComparable<TValue>, IConvertible
-#if NET8_0_OR_GREATER
-        , ISpanParsable<TValue>
-#endif
+    public interface IAlpha<TValue> : IAlpha where TValue : unmanaged, IEquatable<TValue>, IComparable<TValue>
 
     {
         /// <summary>

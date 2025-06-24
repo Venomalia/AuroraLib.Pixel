@@ -6,7 +6,7 @@ namespace AuroraLib.Pixel
     /// Represents a basic RGB (Red, Green, Blue) color structure.
     /// </summary>
     /// <typeparam name="TValue">The numeric type representing the precision or range of the RGB components.</typeparam>
-    public interface IRGB<TValue> : IColor where TValue : unmanaged, IEquatable<TValue>, IComparable<TValue>, IConvertible
+    public interface IRGB<TValue> : IColor where TValue : unmanaged, IEquatable<TValue>, IComparable<TValue>
     {
         /// <summary>
         /// The red component of the color.

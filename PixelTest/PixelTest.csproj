@@ -24,6 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\src\AuroraLib.Pixel.BitmapExtension\AuroraLib.Pixel.BitmapExtension.csproj" />
     <ProjectReference Include="..\src\AuroraLib.Pixel.ImageSharpExtension\AuroraLib.Pixel.ImageSharpExtension.csproj" />
+    <ProjectReference Include="..\src\AuroraLib.Pixel.SkiaSharpExtension\AuroraLib.Pixel.SkiaSharpExtension.csproj" />
   </ItemGroup>
 
 </Project>

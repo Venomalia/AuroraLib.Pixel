@@ -6,7 +6,7 @@
 	  <ImplicitUsings>disable</ImplicitUsings>
 	  <Nullable>enable</Nullable>
 	  <Title>AuroraLib.Pixel.BitmapExtension</Title>
-	  <Version>1.0.0</Version>
+	  <Version>1.1.0</Version>
 	  <AssemblyVersion>$(Version)</AssemblyVersion>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
 	  <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
@@ -53,7 +53,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Configuration)' == 'Release'">
-		<PackageReference Include="AuroraLib.Pixel" Version="1.0.1" />
+		<PackageReference Include="AuroraLib.Pixel" Version="1.1.0" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Configuration)' != 'Release'">
