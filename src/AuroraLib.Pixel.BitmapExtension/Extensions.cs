@@ -73,10 +73,14 @@ namespace AuroraLib.Pixel.BitmapExtension
 
         private static void UpdateBitmapPalette(Bitmap bitmap, IPaletteImage<BGRA32> paletteImage)
         {
-            var bitmapPalette = bitmap.Palette.Entries.AsSpan();
+            var bitmapPalette = bitmap.Palette; // clone of the palette!
+
+            var rawbitmapPalette = bitmapPalette.Entries.AsSpan();
             var auroraPalette = paletteImage.Palette;
-            for (int i = 0; i < bitmapPalette.Length; i++)
-                bitmapPalette[i] = auroraPalette[i];
+            for (int i = 0; i < rawbitmapPalette.Length; i++)
+                rawbitmapPalette[i] = auroraPalette[i];
+
+            bitmap.Palette = bitmapPalette;
         }
     }
 }
