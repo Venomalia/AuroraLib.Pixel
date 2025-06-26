@@ -202,7 +202,7 @@ namespace AuroraLib.Pixel.Image
 
         private int GetColorIndexOrAdd(TColor color)
         {
-            int index = Palette.IndexOf(color);
+            int index = _palette.AsSpan(0,ColorsUsed).IndexOf(color);
 
             // If the color is not in the palette
             if (index < 0)
