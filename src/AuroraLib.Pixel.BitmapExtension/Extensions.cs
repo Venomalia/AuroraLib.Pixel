@@ -56,13 +56,13 @@ namespace AuroraLib.Pixel.BitmapExtension
             return new MemoryImage<TColor>(data, data.Data.Width, data.Data.Height, data.Data.Stride / Unsafe.SizeOf<TColor>());
         }
 
-        private static MemoryPaletteImage<TColor, BGRA32> AsAuroraPaletteImage<TColor>(Bitmap bitmap) where TColor : unmanaged, IColor<TColor>, IIndexColor
+        private static PaletteImage<TColor, BGRA32> AsAuroraPaletteImage<TColor>(Bitmap bitmap) where TColor : unmanaged, IColor<TColor>, IIndexColor
         {
             var data = new BitmapMemoryManager<TColor>(bitmap);
             var imageData = new MemoryImage<TColor>(data, data.Data.Width, data.Data.Height, data.Data.Stride / Unsafe.SizeOf<TColor>());
             var bitmapPalette = bitmap.Palette.Entries.AsSpan();
 
-            var paletteImage = new MemoryPaletteImage<TColor, BGRA32>(imageData, bitmapPalette.Length);
+            var paletteImage = new PaletteImage<TColor, BGRA32>(imageData, bitmapPalette.Length);
             var auroraPalette = paletteImage.Palette;
             for (int i = 0; i < bitmapPalette.Length; i++)
                 auroraPalette[i] = bitmapPalette[i];
