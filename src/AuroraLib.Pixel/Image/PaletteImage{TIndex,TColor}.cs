@@ -1,6 +1,5 @@
 ﻿using AuroraLib.Pixel.PixelProcessor;
 using AuroraLib.Pixel.PixelProcessor.Helper;
-using AuroraLib.Pixel.Processing;
 using AuroraLib.Pixel.Processing.Processor;
 using System;
 using System.Buffers;
@@ -15,7 +14,7 @@ namespace AuroraLib.Pixel.Image
     /// </summary>
     /// <typeparam name="TIndex">The underlying type used to store palette indices in the image.</typeparam>
     /// <typeparam name="TColor">The actual color type used in the palette.</typeparam>
-    public sealed class MemoryPaletteImage<TIndex, TColor> : IPaletteImage<TColor>
+    public sealed class PaletteImage<TIndex, TColor> : IPaletteImage<TColor>
         where TIndex : unmanaged, IIndexColor, IColor<TIndex>
         where TColor : unmanaged, IColor<TColor>
     {
@@ -36,31 +35,31 @@ namespace AuroraLib.Pixel.Image
         ReadOnlySpan<TColor> IReadOnlyPaletteImage<TColor>.Palette => Palette;
 
         /// <summary>
-        /// Initializes a new <see cref="MemoryPaletteImage{TIndex, TColor}"/> using an indexed image and a palette.
+        /// Initializes a new <see cref="PaletteImage{TIndex, TColor}"/> using an indexed image and a palette.
         /// </summary>
         /// <param name="image">The indexed image containing palette indices of type <typeparamref name="TIndex"/>.</param>
         /// <param name="palette">The color palette. Each index in the image maps to a color in this span.</param>
         /// <param name="requestedPaletteSize">The desired number of palette entries. Limited by the bit depth of <typeparamref name="TIndex"/>.</param>
-        public MemoryPaletteImage(IImage<TIndex> image, ReadOnlySpan<TColor> palette, int requestedPaletteSize = 2048) : this(image, CalculateHighestUsedPallet(image), palette, Math.Max(palette.Length, requestedPaletteSize))
+        public PaletteImage(IImage<TIndex> image, ReadOnlySpan<TColor> palette, int requestedPaletteSize = 2048) : this(image, CalculateHighestUsedPallet(image), palette, Math.Max(palette.Length, requestedPaletteSize))
         { }
 
         /// <summary>
-        /// Initializes a new <see cref="MemoryPaletteImage{TIndex, TColor}"/> using an indexed image, a palette, and the number of distinct colors used.
+        /// Initializes a new <see cref="PaletteImage{TIndex, TColor}"/> using an indexed image, a palette, and the number of distinct colors used.
         /// </summary>
         /// <param name="image">The indexed image containing palette indices of type <typeparamref name="TIndex"/>.</param>
         /// <param name="colorsUsed">The number of distinct palette indices used in the image.</param>
         /// <param name="palette">The color palette. Each index in the image maps to a color in this span.</param>
         /// <param name="requestedPaletteSize">The desired number of palette entries. Limited by the bit depth of <typeparamref name="TIndex"/>.</param>
-        public MemoryPaletteImage(IImage<TIndex> image, int colorsUsed, ReadOnlySpan<TColor> palette, int requestedPaletteSize = 2048) : this(image, colorsUsed, Math.Max(palette.Length, requestedPaletteSize))
+        public PaletteImage(IImage<TIndex> image, int colorsUsed, ReadOnlySpan<TColor> palette, int requestedPaletteSize = 2048) : this(image, colorsUsed, Math.Max(palette.Length, requestedPaletteSize))
             => palette.CopyTo(_palette);
 
         /// <summary>
-        /// Initializes a new <see cref="MemoryPaletteImage{TIndex, TColor}"/> using an indexed image and a requested palette size.
+        /// Initializes a new <see cref="PaletteImage{TIndex, TColor}"/> using an indexed image and a requested palette size.
         /// </summary>
         /// <param name="image">The indexed image containing palette indices of type <typeparamref name="TIndex"/>.</param>
         /// <param name="colorsUsed">The number of distinct palette indices used in the image.</param>
         /// <param name="requestedPaletteSize">The desired number of palette entries. Limited by the bit depth of <typeparamref name="TIndex"/>.</param>
-        public MemoryPaletteImage(IImage<TIndex> image, int colorsUsed, int requestedPaletteSize)
+        public PaletteImage(IImage<TIndex> image, int colorsUsed, int requestedPaletteSize)
         {
 #if NET8_0_OR_GREATER
             ArgumentNullException.ThrowIfNull(image);
@@ -74,18 +73,18 @@ namespace AuroraLib.Pixel.Image
             ColorsUsed = colorsUsed;
         }
 
-        /// <inheritdoc cref="MemoryPaletteImage{TIndex, TColor}.MemoryPaletteImage(IImage{TIndex}, int, int)"/>
-        public MemoryPaletteImage(IImage<TIndex> image, int requestedPaletteSize = 2048) : this(image, CalculateHighestUsedPallet(image), requestedPaletteSize)
+        /// <inheritdoc cref="PaletteImage{TIndex, TColor}.PaletteImage(IImage{TIndex}, int, int)"/>
+        public PaletteImage(IImage<TIndex> image, int requestedPaletteSize = 2048) : this(image, CalculateHighestUsedPallet(image), requestedPaletteSize)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MemoryPaletteImage{TIndex, TColor}"/> class with the specified dimensions.
+        /// Initializes a new instance of the <see cref="PaletteImage{TIndex, TColor}"/> class with the specified dimensions.
         /// </summary>
         /// <param name="width">The width of the image in pixels.</param>
         /// <param name="height">The height of the image in pixels.</param>
         /// <param name="stride">The number of pixels per image row.</param>
         /// <param name="requestedPaletteSize">The desired number of palette entries. The actual size is limited by the bit depth of <typeparamref name="TIndex"/>.
-        public MemoryPaletteImage(int width, int height, int stride = default, int requestedPaletteSize = 4095)
+        public PaletteImage(int width, int height, int stride = default, int requestedPaletteSize = 4095)
             : this(new MemoryImage<TIndex>(width, height, stride), 1, requestedPaletteSize)
         { }
 
@@ -147,24 +146,23 @@ namespace AuroraLib.Pixel.Image
                 throw new ArgumentOutOfRangeException(nameof(y));
 
             int toCopy = Math.Min(pixelRow.Length, Width - x);
-
             ReadOnlySpan<TColor> palette = Palette;
 
-            if (_image is IReadOnlyImageSpan<TIndex> spanImage)
+            if (_image is IReadOnlyDirectRowAccess<TIndex> imageRowAccess)
             {
-                int rowStart = y * spanImage.Stride;
-                ReadOnlySpan<TIndex> pixel = spanImage.Pixel.Slice(rowStart, toCopy);
-
-                for (; x < toCopy; x++)
+                ReadOnlySpan<TIndex> row = imageRowAccess.GetRow(y);
+                for (int i = 0; i < toCopy; i++)
                 {
-                    pixelRow[x] = palette[pixel[x].I];
+                    pixelRow[i] = palette[row[x + i].I];
                 }
             }
             else
             {
-                for (; x < toCopy; x++)
+                Span<TIndex> pixel = toCopy <= 512 ? stackalloc TIndex[toCopy] : new TIndex[toCopy];
+                _image.GetPixel(x, y, pixel);
+                for (int i = 0; i < toCopy; i++)
                 {
-                    pixelRow[x] = palette[_image[x, y].I];
+                    pixelRow[i] = palette[pixel[i].I];
                 }
             }
         }
@@ -179,30 +177,29 @@ namespace AuroraLib.Pixel.Image
 
             int toCopy = Math.Min(pixelRow.Length, Width - x);
 
-            if (_image is IImageSpan<TIndex> spanImage)
+            if (_image is IDirectRowAccess<TIndex> imageRowAccess)
             {
-                int rowStart = y * spanImage.Stride;
-                Span<TIndex> pixel = spanImage.Pixel.Slice(rowStart, toCopy);
-
-                for (; x < toCopy; x++)
+                Span<TIndex> row = imageRowAccess.GetWritableRow(y);
+                for (int i = 0; i < toCopy; i++)
                 {
-                    pixel[x].I = GetColorIndexOrAdd(pixelRow[x]);
+                    row[x + i].I = GetColorIndexOrAdd(pixelRow[i]);
                 }
             }
             else
             {
-                TIndex index = default;
-                for (; x < toCopy; x++)
+                Span<TIndex> pixel = toCopy <= 512 ? stackalloc TIndex[toCopy] : new TIndex[toCopy];
+                for (int i = 0; i < toCopy; i++)
                 {
-                    index.I = GetColorIndexOrAdd(pixelRow[x]);
-                    _image[x, y] = index;
+                    pixel[i].I = GetColorIndexOrAdd(pixelRow[i]);
                 }
+                _image.SetPixel(x, y, pixel);
             }
         }
 
+
         private int GetColorIndexOrAdd(TColor color)
         {
-            int index = _palette.AsSpan(0,ColorsUsed).IndexOf(color);
+            int index = _palette.AsSpan(0, ColorsUsed).IndexOf(color);
 
             // If the color is not in the palette
             if (index < 0)
@@ -240,7 +237,7 @@ namespace AuroraLib.Pixel.Image
         }
 
         /// <inheritdoc/>
-        public IImage<TColor> Clone() => new MemoryPaletteImage<TIndex, TColor>(_image.Clone(), ColorsUsed, Palette);
+        public IImage<TColor> Clone() => new PaletteImage<TIndex, TColor>(_image.Clone(), ColorsUsed, Palette);
 
         IImage IReadOnlyImage.Clone() => Clone();
 

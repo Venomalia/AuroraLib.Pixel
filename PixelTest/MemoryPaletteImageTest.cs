@@ -1,6 +1,5 @@
 ﻿using AuroraLib.Pixel.Image;
 using AuroraLib.Pixel.PixelFormats;
-using AuroraLib.Pixel.Processing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Drawing;
@@ -21,7 +20,7 @@ namespace PixelTest
         [TestMethod]
         public void SetAndGetPixel()
         {
-            using var image = new MemoryPaletteImage<I8, RGBA32>(10, 10);
+            using var image = new PaletteImage<I8, RGBA32>(10, 10);
             image[0, 0] = Black;
             image[9, 0] = Red;
             image[0, 9] = Green;
@@ -41,7 +40,7 @@ namespace PixelTest
         [TestMethod]
         public void Crop()
         {
-            using var image = new MemoryPaletteImage<I8, RGBA32>(10, 10);
+            using var image = new PaletteImage<I8, RGBA32>(10, 10);
             image[2, 2] = Black;
             image[6, 2] = Red;
             image[2, 6] = Green;
@@ -63,7 +62,7 @@ namespace PixelTest
         [TestMethod]
         public void Clear()
         {
-            using var image = new MemoryPaletteImage<I8, RGBA32>(10, 10);
+            using var image = new PaletteImage<I8, RGBA32>(10, 10);
             image[0, 0] = Black;
             image[9, 0] = Red;
             image[0, 9] = Green;
@@ -80,7 +79,7 @@ namespace PixelTest
         [TestMethod]
         public void Clone()
         {
-            using var image = new MemoryPaletteImage<I8, RGBA32>(10, 10);
+            using var image = new PaletteImage<I8, RGBA32>(10, 10);
             image[0, 0] = Black;
             image[9, 0] = Red;
             image[0, 9] = Green;
@@ -102,7 +101,7 @@ namespace PixelTest
         [TestMethod]
         public void PaletteColorQuantization()
         {
-            using var image = new MemoryPaletteImage<I4, RGBA32>(10, 10, 0, 4);
+            using var image = new PaletteImage<I4, RGBA32>(10, 10, 0, 4);
 
             // Assign different colors to four corners
             image[0, 0] = Black; // Expected to map to color index 1
