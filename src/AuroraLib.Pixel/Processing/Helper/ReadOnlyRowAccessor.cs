@@ -10,7 +10,6 @@ namespace AuroraLib.Pixel.PixelProcessor.Helper
     public readonly ref struct ReadOnlyRowAccessor<TColor> where TColor : unmanaged, IColor<TColor>
     {
         private readonly Span<TColor> Buffer;
-        private readonly ReadOnlySpan<TColor> Pixel;
         private readonly IReadOnlyImage<TColor> Image;
         private readonly int Width;
         private readonly int X;
@@ -23,17 +22,20 @@ namespace AuroraLib.Pixel.PixelProcessor.Helper
             X = xOfset;
             Width = width;
             Image = image;
-            if (image is IReadOnlyImageSpan<TColor> imageSpan)
+            if (image is MemoryImage<TColor> imageSpan)
             {
                 Stride = imageSpan.Stride;
-                Pixel = imageSpan.Pixel;
+                Buffer = imageSpan.Pixel;
+            }
+            else if (image is IReadOnlyDirectRowAccess<TColor>)
+            {
+                Stride = -2;
                 Buffer = default;
             }
             else
             {
                 Stride = -1;
                 Buffer = new TColor[width];
-                Pixel = default;
             }
         }
 
@@ -48,7 +50,10 @@ namespace AuroraLib.Pixel.PixelProcessor.Helper
                 }
                 else
                 {
-                    return Pixel.Slice(y * Stride + X, Width);
+                    if (Stride == -2)
+                        return ((IReadOnlyDirectRowAccess<TColor>)Image).GetRow(y).Slice(X,  Width);
+
+                    return Buffer.Slice(y * Stride + X, Width);
                 }
             }
         }

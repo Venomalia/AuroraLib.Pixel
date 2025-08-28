@@ -22,10 +22,15 @@ namespace AuroraLib.Pixel.PixelProcessor
             X = xOfset;
             Width = width;
             Image = image;
-            if (!forceBuffering && image is IImageSpan<TColor> imageSpan)
+            if (!forceBuffering && image is MemoryImage<TColor> mImage)
             {
-                Stride = imageSpan.Stride;
-                BufferOrPixel = imageSpan.Pixel;
+                Stride = mImage.Stride;
+                BufferOrPixel = mImage.Pixel;
+            }
+            else if (!forceBuffering && image is IDirectRowAccess<TColor> rawImage)
+            {
+                Stride = -2;
+                BufferOrPixel = Span<TColor>.Empty;
             }
             else
             {
@@ -54,15 +59,25 @@ namespace AuroraLib.Pixel.PixelProcessor
                 }
                 else
                 {
+                    if (Stride == -2)
+                        return ((IDirectRowAccess<TColor>)Image).GetWritableRow(y).Slice(X, Width);
+
                     return BufferOrPixel.Slice(y * Stride + X, Width);
                 }
             }
             set
             {
                 if (IsBuffered)
+                {
                     Image.SetPixel(X, y, value);
+                }
                 else
-                    value.CopyTo(BufferOrPixel.Slice(y * Stride + X, Width));
+                {
+                    if (Stride == -2)
+                        value.CopyTo(((IDirectRowAccess<TColor>)Image).GetWritableRow(y));
+                    else
+                        value.CopyTo(BufferOrPixel.Slice(y * Stride + X, Width));
+                }
             }
         }
     }

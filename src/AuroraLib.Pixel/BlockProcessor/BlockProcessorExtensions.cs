@@ -132,7 +132,7 @@ namespace AuroraLib.Pixel.BlockProcessor
                 ThrowSourceBufferLength(source.Length, expected);
 
             // Fast path: directly decode into contiguous pixel buffer if layout matches
-            if (destination is IImageSpan<TColor> targetISpan && targetISpan.Stride == stride && targetISpan.Pixel.Length >= stride * blocksPerRow * blockHeight)
+            if (destination is MemoryImage<TColor> targetISpan && targetISpan.Stride == stride && targetISpan.Pixel.Length >= stride * blocksPerRow * blockHeight)
             {
                 DecodeImageBuffer(processor, source, targetISpan.Pixel, stride);
                 return;
@@ -242,7 +242,7 @@ namespace AuroraLib.Pixel.BlockProcessor
                 throw new ArgumentException($"Destination buffer is too small. Expected at least {expected} bytes, but got {destination.Length}.", nameof(destination));
 
             // Fast path: directly encode from contiguous pixel buffer if layout matches
-            if (source is IReadOnlyImageSpan<TColor> sourceISpan && sourceISpan.Stride == stride && sourceISpan.Pixel.Length >= stride * blocksPerRow * blockHeight)
+            if (source is MemoryImage<TColor> sourceISpan && sourceISpan.Stride == stride && sourceISpan.Pixel.Length >= stride * blocksPerRow * blockHeight)
             {
                 processor.EncodeImageBuffer(sourceISpan.Pixel, destination, stride);
                 return;

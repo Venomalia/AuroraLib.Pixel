@@ -8,6 +8,9 @@ namespace AuroraLib.Pixel.Image
     /// <typeparam name="TColor">The actual color type stored in the palette.</typeparam>
     public interface IReadOnlyPaletteImage<TColor> : IReadOnlyImage<TColor> where TColor : unmanaged, IColor<TColor>
     {
+        /// <summary>
+        /// Gets the number of colors currently used in the palette.
+        /// </summary>
         int ColorsUsed { get; }
 
         /// <summary>
