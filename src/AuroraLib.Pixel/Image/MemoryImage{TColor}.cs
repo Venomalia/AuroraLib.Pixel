@@ -1,5 +1,4 @@
-﻿using AuroraLib.Pixel.Processing;
-using AuroraLib.Pixel.Processing.Processor;
+﻿using AuroraLib.Pixel.Processing.Processor;
 using System;
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
@@ -13,7 +12,7 @@ namespace AuroraLib.Pixel.Image
     /// Represents an image , providing span-based access to pixel data.
     /// </summary>
     /// <typeparam name="TColor">The pixel color type implementing <see cref="IColor{TColor}"/>.</typeparam>
-    public sealed class MemoryImage<TColor> : IImageSpan<TColor>
+    public sealed class MemoryImage<TColor> : IDirectRowAccess<TColor>
         where TColor : unmanaged, IColor<TColor>
     {
         private Memory<TColor> _pixelMemory;
@@ -24,12 +23,16 @@ namespace AuroraLib.Pixel.Image
         public int Width { get; private set; }
         /// <inheritdoc/>
         public int Height { get; private set; }
-        /// <inheritdoc/>
-        public int Stride { get; }
-        /// <inheritdoc/>
-        public Span<TColor> Pixel => _pixelMemory.Span;
 
-        ReadOnlySpan<TColor> IReadOnlyImageSpan<TColor>.Pixel => Pixel;
+        /// <summary>
+        /// Gets the number of pixels per row (stride).
+        /// </summary>
+        public int Stride { get; }
+
+        /// <summary>
+        /// Gets a span over the raw pixel data that can be modified directly.
+        /// </summary>
+        public Span<TColor> Pixel => _pixelMemory.Span;
 
         /// <inheritdoc/>
         public TColor this[int x, int y]
@@ -141,6 +144,12 @@ namespace AuroraLib.Pixel.Image
         public void Apply(IReadOnlyPixelProcessor processor) => processor.Apply(this);
 
         /// <inheritdoc/>
+        public ReadOnlySpan<TColor> GetRow(int y) => GetWritableRow(y);
+
+        /// <inheritdoc/>
+        public Span<TColor> GetWritableRow(int y) => Pixel.Slice(y * Stride, Width);
+
+        /// <inheritdoc/>
         public void Dispose()
         {
             if (!_pixelMemory.IsEmpty)
@@ -168,7 +177,7 @@ namespace AuroraLib.Pixel.Image
             => pixelRow.CopyTo(Pixel.Slice(y * Stride + x, pixelRow.Length));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void ThrowIfOutOfBounds(int x, int y)
+        private void ThrowIfOutOfBounds(int x, int y)
         {
             if ((uint)x >= Width)
                 ThrowOutOfBoundsOfImage(x, Width, nameof(x), nameof(Width));
@@ -186,5 +195,6 @@ namespace AuroraLib.Pixel.Image
         internal static void ThrowOutOfBoundsOfImage(int argument, int imageData, string paramNameArgument, string paramNameImageData)
 #endif
             => throw new ArgumentOutOfRangeException(paramNameArgument, $"{paramNameArgument} = {argument} is outside the image {paramNameImageData} {imageData}.");
+
     }
 }
