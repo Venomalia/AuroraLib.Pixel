@@ -7,7 +7,7 @@ namespace AuroraLib.Pixel.BlockProcessor
     /// A block processor for 4bpp (4 bits per pixel) tile data used on Game Boy Advance, GameCube, Wii.
     /// Each block represents an 8x8 pixel tile with 4-bit color indices.
     /// </summary>
-    public class I4Block : IBlockProcessor<I4>
+    public sealed class GxI4Block : IBlockProcessor<I4>
     {
         private const int BPB = 4 * BlockSize * BlockSize / 8, BlockSize = 8;
 

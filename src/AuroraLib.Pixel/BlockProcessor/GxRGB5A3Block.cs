@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 namespace AuroraLib.Pixel.BlockProcessor
 {
     /// <summary>
-    /// Provides encoding and decoding for 4x4 blocks of RGB565 pixel data.
+    /// Provides encoding and decoding for 4x4 blocks of RGB5A3 pixel data.
     /// </summary>
-    public class RGB565Block : IBlockProcessor<RGB565>
+    public sealed class GxRGB5A3Block : IBlockProcessor<RGB5A3>
     {
         private const int BlockSize = 4, BPB = BlockSize * BlockSize * 2;
 
@@ -22,10 +22,10 @@ namespace AuroraLib.Pixel.BlockProcessor
         public int BytesPerBlock => BPB;
 
         /// <inheritdoc/>
-        public void DecodeBlock(ReadOnlySpan<byte> source, Span<RGB565> target, int stride)
+        public void DecodeBlock(ReadOnlySpan<byte> source, Span<RGB5A3> target, int stride)
         {
             ReadOnlySpan<ushort> sourceUshort = MemoryMarshal.Cast<byte, ushort>(source);
-            Span<ushort> targetUshort = MemoryMarshal.Cast<RGB565, ushort>(target);
+            Span<ushort> targetUshort = MemoryMarshal.Cast<RGB5A3, ushort>(target);
             int i = 0;
             for (int y = 0; y < BlockSize; y++)
             {
@@ -38,9 +38,9 @@ namespace AuroraLib.Pixel.BlockProcessor
         }
 
         /// <inheritdoc/>
-        public void EncodeBlock(ReadOnlySpan<RGB565> source, Span<byte> target, int stride)
+        public void EncodeBlock(ReadOnlySpan<RGB5A3> source, Span<byte> target, int stride)
         {
-            ReadOnlySpan<ushort> sourceUshort = MemoryMarshal.Cast<RGB565, ushort>(source);
+            ReadOnlySpan<ushort> sourceUshort = MemoryMarshal.Cast<RGB5A3, ushort>(source);
             Span<ushort> targetUshort = MemoryMarshal.Cast<byte, ushort>(target);
             int i = 0;
             for (int y = 0; y < BlockSize; y++)

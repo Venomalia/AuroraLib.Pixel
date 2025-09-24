@@ -6,7 +6,7 @@ namespace AuroraLib.Pixel.BlockProcessor
     /// <summary>
     /// Provides encoding and decoding for 4x4 blocks of RGBA32 pixel data used on GameCube, Wii.
     /// </summary>
-    public class RGBA32Block : IBlockProcessor<RGBA32>
+    public sealed class GxRGBA32Block : IBlockProcessor<RGBA32>
     {
         private const int BlockSize = 4, BPB = BlockSize * BlockSize * 4;
 

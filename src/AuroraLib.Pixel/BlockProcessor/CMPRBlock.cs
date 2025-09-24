@@ -8,9 +8,9 @@ namespace AuroraLib.Pixel.BlockProcessor
     /// <summary>
     /// Encodes and decodes CMPR (S3TC/DXT1-like) texture blocks used on GameCube and Wii.
     /// </summary>
-    public class CMPRBlock<TColor> : IBlockProcessor<TColor> where TColor : unmanaged, IColor<TColor>, IRGBA<byte>
+    public sealed class CMPRBlock<TColor> : IBlockProcessor<TColor> where TColor : unmanaged, IColor<TColor>, IRGBA<byte>
     {
-        private const int BPB = 4 * BlockSize * BlockSize / 8, BlockSize = 8;
+        private const int BPB = 4 * 8, BlockSize = 8;
 
         /// <inheritdoc/>
         public int BlockWidth => BlockSize;
