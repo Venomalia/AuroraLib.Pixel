@@ -8,7 +8,7 @@ namespace AuroraLib.Pixel.BlockProcessor
     /// <summary>
     /// Provides encoding and decoding for 4x4 blocks of IA8 (Intensity + Alpha, 8 bits each) pixel data.
     /// </summary>
-    public class IA8Block : IBlockProcessor<IA16>
+    public sealed class GxIA8Block : IBlockProcessor<IA16>
     {
         private const int BlockSize = 4, BPB = BlockSize * BlockSize * 2;
 

@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 namespace AuroraLib.Pixel.BlockProcessor
 {
     /// <summary>
-    /// Provides block-based encoding and decoding for 8-bit indexed color images using 8x4 blocks.
+    /// Provides encoding and decoding for 8x4 blocks of IA4 (Intensity + Alpha, 4 bits each) pixel data.
     /// </summary>
-    public class I8Block : IBlockProcessor<I8>
+    public sealed class GxIA4Block : IBlockProcessor<IA8>
     {
         private const int BWidth = 8, BHeight = 4, BPB = BWidth * BHeight;
 
@@ -21,9 +21,9 @@ namespace AuroraLib.Pixel.BlockProcessor
         public int BytesPerBlock => BPB;
 
         /// <inheritdoc/>
-        public void DecodeBlock(ReadOnlySpan<byte> source, Span<I8> target, int stride)
+        public void DecodeBlock(ReadOnlySpan<byte> source, Span<IA8> target, int stride)
         {
-            Span<byte> targetByte = MemoryMarshal.Cast<I8, byte>(target);
+            Span<byte> targetByte = MemoryMarshal.Cast<IA8, byte>(target);
             int i = 0;
             for (int y = 0; y < BHeight; y++)
             {
@@ -36,9 +36,9 @@ namespace AuroraLib.Pixel.BlockProcessor
         }
 
         /// <inheritdoc/>
-        public void EncodeBlock(ReadOnlySpan<I8> source, Span<byte> target, int stride)
+        public void EncodeBlock(ReadOnlySpan<IA8> source, Span<byte> target, int stride)
         {
-            ReadOnlySpan<byte> sourceByte = MemoryMarshal.Cast<I8, byte>(source);
+            ReadOnlySpan<byte> sourceByte = MemoryMarshal.Cast<IA8, byte>(source);
             int i = 0;
             for (int y = 0; y < BHeight; y++)
             {
@@ -50,5 +50,4 @@ namespace AuroraLib.Pixel.BlockProcessor
             }
         }
     }
-
 }
