@@ -1,4 +1,5 @@
-﻿using AuroraLib.Pixel.PixelProcessor;
+﻿using AuroraLib.Pixel.Metadata;
+using AuroraLib.Pixel.PixelProcessor;
 using AuroraLib.Pixel.PixelProcessor.Helper;
 using AuroraLib.Pixel.Processing.Processor;
 using System;
@@ -31,6 +32,9 @@ namespace AuroraLib.Pixel.Image
 
         /// <inheritdoc/>
         public Span<TColor> Palette => _palette.AsSpan();
+
+        /// <inheritdoc/>
+        public ImageMetadata? Metadata { get; set; }
 
         ReadOnlySpan<TColor> IReadOnlyPaletteImage<TColor>.Palette => Palette;
 

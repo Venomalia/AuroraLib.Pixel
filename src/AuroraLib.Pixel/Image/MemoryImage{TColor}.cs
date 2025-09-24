@@ -1,4 +1,5 @@
-﻿using AuroraLib.Pixel.Processing.Processor;
+﻿using AuroraLib.Pixel.Metadata;
+using AuroraLib.Pixel.Processing.Processor;
 using System;
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
@@ -28,6 +29,9 @@ namespace AuroraLib.Pixel.Image
         /// Gets the number of pixels per row (stride).
         /// </summary>
         public int Stride { get; }
+
+        /// <inheritdoc/>
+        public ImageMetadata? Metadata { get; set; }
 
         /// <summary>
         /// Gets a span over the raw pixel data that can be modified directly.

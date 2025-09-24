@@ -1,5 +1,6 @@
 ﻿using AuroraLib.Core.Buffers;
 using AuroraLib.Pixel.Image;
+using AuroraLib.Pixel.Metadata;
 using AuroraLib.Pixel.PixelFormats;
 using AuroraLib.Pixel.Processing;
 using SixLabors.ImageSharp;
@@ -83,6 +84,10 @@ namespace AuroraLib.Pixel.ImageSharpExtension
                 if (image.DangerousTryGetSinglePixelMemory(out Memory<TPixel> memory))
                 {
                     memoryImage = new MemoryImage<TColor>(memory.Cast<TPixel, TColor>(), image.Width, image.Height, image.Width);
+                    memoryImage.Metadata = new ImageMetadata();
+                    memoryImage.Metadata.Profiles.Add("SixLabors", image.Metadata);
+                    if (image.Metadata.XmpProfile != null)
+                        memoryImage.Metadata.XmpProfile = image.Metadata.XmpProfile.GetDocument();
                     return true;
                 }
                 memoryImage = null;

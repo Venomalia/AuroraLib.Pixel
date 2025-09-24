@@ -1,4 +1,5 @@
-﻿using AuroraLib.Pixel.Processing.Processor;
+﻿using AuroraLib.Pixel.Metadata;
+using AuroraLib.Pixel.Processing.Processor;
 using System;
 using System.Numerics;
 
@@ -20,6 +21,11 @@ namespace AuroraLib.Pixel.Image
         int Height { get; }
 
         /// <summary>
+        /// Gets the metadata associated with the image,
+        /// </summary>
+        ImageMetadata? Metadata { get; set; }
+
+        /// <summary>
         /// Gets the pixel color at the specified coordinates as a scaled <see cref="Vector4"/>.
         /// Each component (X = R, Y = G, Z = B, W = A) is in the range [0, 1].
         /// </summary>
@@ -39,5 +45,6 @@ namespace AuroraLib.Pixel.Image
         /// </summary>
         /// <returns>A new <see cref="IImage"/> that is a clone of the current image.</returns>
         IImage Clone();
+
     }
 }
