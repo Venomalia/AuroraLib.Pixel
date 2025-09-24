@@ -1,4 +1,5 @@
 ﻿using AuroraLib.Pixel.BlockProcessor;
+using AuroraLib.Pixel.Metadata;
 using AuroraLib.Pixel.Processing;
 using AuroraLib.Pixel.Processing.Processor;
 using System;
@@ -34,6 +35,8 @@ namespace AuroraLib.Pixel.Image
         public int Stride { get; private set; }
         /// <inheritdoc/>
         public IBlockFormat BlockFormat => _block;
+        /// <inheritdoc/>
+        public ImageMetadata? Metadata { get; set; }
         /// <inheritdoc/>
         public Span<byte> Raw
         {
