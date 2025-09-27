@@ -36,6 +36,12 @@ namespace AuroraLib.Pixel.PixelFormats
             set => PackedValue = PackRGB(R, G, value);
         }
 
+        float IColor.Mask
+        {
+            readonly get => Help.BT709Luminance(ToScaledVector4());
+            set => B = G = R = (byte)(value * byte.MaxValue);
+        }
+
         private static ushort PackRGB(byte r, byte g, byte b)
             => (ushort)((r & 0xF8) << 8 | // 5 Bit R - Bits 11–15
                         (g & 0xFC) << 3 | // 6 Bit G - Bits 5–10

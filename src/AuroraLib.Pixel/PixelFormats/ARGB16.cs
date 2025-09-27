@@ -46,7 +46,7 @@ namespace AuroraLib.Pixel.PixelFormats
             set => GB = PackByte(G, value);
         }
 
-        float IAlpha.A
+        float IColor.Mask
         {
             readonly get => (float)A / byte.MaxValue;
             set => A = (byte)(value * byte.MaxValue);

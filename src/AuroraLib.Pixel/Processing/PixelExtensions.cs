@@ -3,6 +3,7 @@ using AuroraLib.Pixel.PixelProcessor;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace AuroraLib.Pixel.Processing
 {
@@ -133,15 +134,9 @@ namespace AuroraLib.Pixel.Processing
 
             for (int i = 0; i < source.Length; i++)
             {
-                target[i].FromScaledVector4(blendMode(target[i].ToScaledVector4(), source[i].ToScaledVector4(), GetMask(mask[i])));
+                target[i].FromScaledVector4(blendMode(target[i].ToScaledVector4(), source[i].ToScaledVector4(), mask[i].Mask));
             }
-
-            static float GetMask(TMask mask) => mask switch
-            {
-                IAlpha alpha => alpha.A,
-                IIntensity intensity => intensity.I,
-                _ => Help.BT709Luminance(mask.ToScaledVector4())
-            };
         }
+
     }
 }

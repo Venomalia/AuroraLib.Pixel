@@ -18,6 +18,12 @@ namespace AuroraLib.Pixel
     public interface IColor
     {
         /// <summary>
+        /// Gets or sets the normalized mask value of the color component.
+        /// The value is in the range of [0, 1].
+        /// </summary>
+        float Mask { get; set; }
+
+        /// <summary>
         /// Gets the pixel format metadata for this color.
         /// </summary>
         PixelFormatInfo FormatInfo { get; }
