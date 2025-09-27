@@ -23,6 +23,12 @@ namespace AuroraLib.Pixel.PixelFormats
 
         readonly byte IRGB<byte>.A => byte.MaxValue;
 
+        float IColor.Mask
+        {
+            readonly get => Help.BT709Luminance(ToScaledVector4());
+            set => B = G = R = (byte)(value * byte.MaxValue);
+        }
+
         public RGB24(byte r, byte g, byte b)
         {
             R = r;

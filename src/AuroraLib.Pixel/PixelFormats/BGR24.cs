@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace AuroraLib.Pixel.PixelFormats
 {
@@ -21,6 +22,12 @@ namespace AuroraLib.Pixel.PixelFormats
         public byte R { readonly get; set; }
 
         readonly byte IRGB<byte>.A => byte.MaxValue;
+
+        float IColor.Mask
+        {
+            readonly get => Help.BT709Luminance(ToScaledVector4());
+            set => B = G = R = (byte)(value * byte.MaxValue);
+        }
 
         public BGR24(byte b, byte g, byte r)
         {

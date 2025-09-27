@@ -5,7 +5,8 @@ using System.Runtime.CompilerServices;
 namespace AuroraLib.Pixel.PixelFormats
 {
     /// <summary>
-    /// 
+    /// Represents a pixel in RGBA 10-10-10-2 format.
+    /// This format stores 10 bits per channel for Blue, Green, and Red, and 2 bits for Alpha, packed into a 32-bit integer.
     /// </summary>
     public struct RGBA1010102 : IRGBA<ushort>, IAlpha<byte>, IColor<RGBA1010102>
     {
@@ -43,11 +44,12 @@ namespace AuroraLib.Pixel.PixelFormats
             set => PackedValue = PackRGBA(R, G, B, value);
         }
 
-        float IAlpha.A
+        float IColor.Mask
         {
             readonly get => (float)A / byte.MaxValue;
             set => A = (byte)(value * byte.MaxValue);
         }
+
         ushort IRGBA<ushort>.A { readonly get => Help.Expand8BitTo16Bit(A); set => A = (byte)(value >> 8); }
         ushort IAlpha<ushort>.A { readonly get => Help.Expand8BitTo16Bit(A); set => A = (byte)(value >> 8); }
         readonly ushort IRGB<ushort>.A => Help.Expand8BitTo16Bit(A);

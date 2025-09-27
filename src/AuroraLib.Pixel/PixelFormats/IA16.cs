@@ -17,13 +17,7 @@ namespace AuroraLib.Pixel.PixelFormats
         /// <inheritdoc/>
         public byte A { get; set; }
 
-        float IIntensity.I
-        {
-            readonly get => (float)I / byte.MaxValue;
-            set => I = (byte)(value * byte.MaxValue);
-        }
-
-        float IAlpha.A
+        float IColor.Mask
         {
             readonly get => (float)A / byte.MaxValue;
             set => A = (byte)(value * byte.MaxValue);

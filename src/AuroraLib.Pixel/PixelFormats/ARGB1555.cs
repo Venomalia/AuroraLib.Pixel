@@ -46,7 +46,7 @@ namespace AuroraLib.Pixel.PixelFormats
             set => PackedValue = (ushort)(PackedValue & AMask - 1 | (value ? AMask : 0));
         }
 
-        float IAlpha.A
+        float IColor.Mask
         {
             readonly get => A ? 1 : 0;
             set => A = value >= 0.5f;

@@ -22,7 +22,7 @@ namespace AuroraLib.Pixel.PixelFormats
         /// <inheritdoc/>
         public Half A { readonly get; set; }
 
-        float IAlpha.A { readonly get => (float)A; set => A = (Half)value; }
+        float IColor.Mask { readonly get => (float)A; set => A = (Half)value; }
 
         /// <inheritdoc/>
         public Vector4 ToScaledVector4() => new Vector4((float)R, (float)G, (float)B, (float)A);

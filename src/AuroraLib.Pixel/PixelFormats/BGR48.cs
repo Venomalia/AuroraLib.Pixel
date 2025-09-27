@@ -22,6 +22,12 @@ namespace AuroraLib.Pixel.PixelFormats
 
         readonly ushort IRGB<ushort>.A => ushort.MaxValue;
 
+        float IColor.Mask
+        {
+            readonly get => Help.BT709Luminance(ToScaledVector4());
+            set => B = G = R = (byte)(value * ushort.MaxValue);
+        }
+
         public BGR48(ushort r, ushort g, ushort b)
         {
             R = r;

@@ -27,13 +27,7 @@ namespace AuroraLib.Pixel.PixelFormats
             set => PackedValue = PackIA4(I, value);
         }
 
-        float IIntensity.I
-        {
-            readonly get => (float)(PackedValue & 0xF) / 15;
-            set => PackedValue = (byte)((PackedValue & 0xF0) | (byte)(value * 15));
-        }
-
-        float IAlpha.A
+        float IColor.Mask
         {
             readonly get => (float)A / byte.MaxValue;
             set => A = (byte)(value * byte.MaxValue);

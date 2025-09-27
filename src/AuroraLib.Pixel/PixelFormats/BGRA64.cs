@@ -23,7 +23,7 @@ namespace AuroraLib.Pixel.PixelFormats
         /// <inheritdoc/>
         public ushort A { readonly get; set; }
 
-        float IAlpha.A
+        float IColor.Mask
         {
             readonly get => (float)A / ushort.MaxValue;
             set => A = (ushort)(value * ushort.MaxValue);

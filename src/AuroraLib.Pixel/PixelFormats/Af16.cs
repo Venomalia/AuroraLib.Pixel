@@ -15,7 +15,7 @@ namespace AuroraLib.Pixel.PixelFormats
         /// <inheritdoc/>
         public Half A { readonly get; set; }
 
-        float IAlpha.A
+        float IColor.Mask
         {
             readonly get => (float)A;
             set => A = (Half)(value);

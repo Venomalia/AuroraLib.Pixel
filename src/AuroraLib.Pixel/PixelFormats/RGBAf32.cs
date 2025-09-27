@@ -21,6 +21,8 @@ namespace AuroraLib.Pixel.PixelFormats
         /// <inheritdoc/>
         public float A { readonly get; set; }
 
+        float IColor.Mask { readonly get => A; set => A = value; }
+
         public RGBAf32(float r, float g, float b, float a)
         {
             R = r;

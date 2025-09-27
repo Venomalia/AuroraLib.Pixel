@@ -18,7 +18,7 @@ namespace AuroraLib.Pixel.PixelFormats
             readonly get => Help.Expand4BitTo8Bit(i4b);
             set => i4b = (byte)(value >> 4);
         }
-        float IIntensity.I
+        float IColor.Mask
         {
             readonly get => (float)i4b / 15;
             set => i4b = (byte)(value * 15);
