@@ -37,10 +37,10 @@ namespace AuroraLib.Pixel.BlockProcessor
                 for (int x = 0; x < BlockSize; x++)
                 {
                     ref RGBA32 col = ref target[dst + x];
-                    col.A = source[i * 4];
-                    col.R = source[i * 4 + 1];
-                    col.G = source[i * 4 + 32];
-                    col.B = source[i * 4 + 33];
+                    col.A = source[i * 2];
+                    col.R = source[i * 2 + 1];
+                    col.G = source[i * 2 + 32];
+                    col.B = source[i * 2 + 33];
                     i++;
                 }
             }
@@ -56,10 +56,10 @@ namespace AuroraLib.Pixel.BlockProcessor
                 for (int x = 0; x < BlockSize; x++)
                 {
                     RGBA32 col = source[dst + x];
-                    target[i * 4] = col.A;
-                    target[i * 4 + 1] = col.R;
-                    target[i * 4 + 32] = col.G;
-                    target[i * 4 + 33] = col.A;
+                    target[i * 2] = col.A;
+                    target[i * 2 + 1] = col.R;
+                    target[i * 2 + 32] = col.G;
+                    target[i * 2 + 33] = col.B;
                     i++;
                 }
             }
