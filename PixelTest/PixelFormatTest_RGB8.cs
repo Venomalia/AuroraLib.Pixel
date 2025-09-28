@@ -14,7 +14,7 @@ namespace PixelTest
 
         public static IEnumerable<object[]> GetAvailablePixelFormats()
         {
-            IEnumerable<Type> availableAlgorithmTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes().Where(s => typeof(IRGB<byte>).IsAssignableFrom(s) && !s.IsInterface && !s.IsAbstract));
+            IEnumerable<Type> availableAlgorithmTypes = AppDomain.CurrentDomain.GetAssemblies().Where(a => !a.IsDynamic).SelectMany(x => x.GetExportedTypes().Where(s => typeof(IRGB<byte>).IsAssignableFrom(s) && !s.IsInterface && !s.IsAbstract));
             return availableAlgorithmTypes.Select(x => new object[] { (IColor)Activator.CreateInstance(x)! });
         }
 

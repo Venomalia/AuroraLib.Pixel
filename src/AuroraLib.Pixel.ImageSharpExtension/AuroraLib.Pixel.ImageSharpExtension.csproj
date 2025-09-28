@@ -29,11 +29,11 @@
 	</PropertyGroup>
 
 	<ItemGroup Condition="$(NET.Contains('|$(TargetFramework)|'))">
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.8" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
   </ItemGroup>
 
 	<ItemGroup Condition="$(NETFrameworks.Contains('|$(TargetFramework)|'))">
-		<PackageReference Include="SixLabors.ImageSharp" Version="2.1.10" />
+		<PackageReference Include="SixLabors.ImageSharp" Version="2.1.11" />
 	</ItemGroup>
 
 	<ItemGroup>
