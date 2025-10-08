@@ -20,7 +20,7 @@ namespace PixelTest
         [TestMethod]
         public void SetAndGetPixel()
         {
-            using var image = new BlockImage<GxRGBA32Block, RGBA32>(10, 10);
+            using var image = new BlockImage<RGBA32>(new BC1Block<RGBA32>(), 10, 10);
             image[0, 0] = Black;
             image[9, 0] = Red;
             image[0, 9] = Green;
@@ -38,13 +38,13 @@ namespace PixelTest
         [TestMethod]
         public void Crop()
         {
-            using var image = new BlockImage<GxRGBA32Block, RGBA32>(10, 10);
+            using var image = new BlockImage<RGBA32>(new BC1Block<RGBA32>(), 10, 10);
             image[2, 2] = Black;
             image[6, 2] = Red;
             image[2, 6] = Green;
             image[6, 6] = Blue;
 
-            image[0, 0] = Yellow; // Will be removed from the Palette.
+            image[0, 0] = Yellow; // Will be removed.
 
             image.Crop(new Rectangle(2, 2, 5, 5));
 
@@ -59,7 +59,7 @@ namespace PixelTest
         [TestMethod]
         public void Clear()
         {
-            using var image = new BlockImage<GxRGBA32Block, RGBA32>(10, 10);
+            using var image = new BlockImage<RGBA32>(new BC1Block<RGBA32>(), 10, 10);
             image[0, 0] = Black;
             image[9, 0] = Red;
             image[0, 9] = Green;
@@ -76,7 +76,7 @@ namespace PixelTest
         [TestMethod]
         public void Clone()
         {
-            using var image = new BlockImage<GxRGBA32Block, RGBA32>(10, 10);
+            using var image = new BlockImage<RGBA32>(new BC1Block<RGBA32>(), 10, 10);
             image[0, 0] = Black;
             image[9, 0] = Red;
             image[0, 9] = Green;
