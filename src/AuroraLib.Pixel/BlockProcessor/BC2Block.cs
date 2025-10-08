@@ -19,7 +19,13 @@ namespace AuroraLib.Pixel.BlockProcessor
         /// <inheritdoc/>
         public int BytesPerBlock => BPB;
 
-        private static readonly BC1Block<TColor> BC1 = new BC1Block<TColor>(alphaThreshold: 0); // (alphaThreshold: 0) Encoder ignores alpha.
+        public BC2Block() : this(new BC1Block<TColor>.BoundingBoxColorEncoder(0)) // (alphaThreshold: 0) Encoder ignores alpha.
+        { }
+
+        public BC2Block(BC1Block<TColor>.IColorSelector colorEncoder)
+            => BC1 = new BC1Block<TColor>(colorEncoder);
+
+        private readonly BC1Block<TColor> BC1;
 
         public void DecodeBlock(ReadOnlySpan<byte> source, Span<TColor> target, int stride)
         {

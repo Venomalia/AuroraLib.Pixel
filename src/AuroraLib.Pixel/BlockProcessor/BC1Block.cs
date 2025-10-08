@@ -1,6 +1,7 @@
 ﻿using AuroraLib.Pixel.PixelFormats;
 using System;
 using System.Buffers.Binary;
+using System.ComponentModel;
 using System.Numerics;
 
 namespace AuroraLib.Pixel.BlockProcessor
@@ -11,11 +12,12 @@ namespace AuroraLib.Pixel.BlockProcessor
     /// </summary>
     public sealed class BC1Block<TColor> : IBlockProcessor<TColor> where TColor : unmanaged, IColor<TColor>, IRGBA<byte>
     {
+        /// <summary>
+        /// Default selector for selecting the color endpoints when encoding blocks.
+        /// </summary>
+        public static IColorSelector DefaultSelector { get; set; } = new BoundingBoxColorEncoder();
+
         private const int BPB = 8, BlockSize = 4;
-        private const byte DefaultAlphaThreshold = 32;
-
-        private readonly byte AlphaThreshold;
-
         /// <inheritdoc/>
         public int BlockWidth => BlockSize;
 
@@ -25,10 +27,13 @@ namespace AuroraLib.Pixel.BlockProcessor
         /// <inheritdoc/>
         public int BytesPerBlock => BPB;
 
-        public BC1Block() : this(DefaultAlphaThreshold) { }
+        public BC1Block() : this(DefaultSelector)
+        { }
 
-        public BC1Block(byte alphaThreshold)
-            => AlphaThreshold = alphaThreshold;
+        public BC1Block(IColorSelector colorEncoder)
+            => _colorEncoder = colorEncoder;
+
+        private readonly IColorSelector _colorEncoder;
 
         /// <inheritdoc/>
         public void DecodeBlock(ReadOnlySpan<byte> source, Span<TColor> target, int stride)
@@ -57,7 +62,7 @@ namespace AuroraLib.Pixel.BlockProcessor
         {
             Span<TColor> interpolatedColors = stackalloc TColor[4];
 
-            GetDominantColors(source, out RGB565 color0, out RGB565 color1, AlphaThreshold);
+            _colorEncoder.GetEndpoints(source, stride, out RGB565 color0, out RGB565 color1);
             GetInterpolatedColours(color0, color1, interpolatedColors);
 
             uint colorIndex = 0;
@@ -67,7 +72,7 @@ namespace AuroraLib.Pixel.BlockProcessor
                 for (int x = 0; x < BlockSize; x++)
                 {
                     int index = y * stride + x;
-                    int bestIndex = GetColorIndex(source[index], interpolatedColors, AlphaThreshold);
+                    int bestIndex = GetColorIndex(source[index], interpolatedColors, _colorEncoder.AlphaThreshold);
                     colorIndex |= (uint)(bestIndex << shift);
                     shift += 2;
                 }
@@ -77,7 +82,7 @@ namespace AuroraLib.Pixel.BlockProcessor
             BinaryPrimitives.WriteUInt32LittleEndian(target.Slice(4), colorIndex);
         }
 
-        internal static void GetInterpolatedColours(RGB565 left, RGB565 right, Span<TColor> colors)
+        static void GetInterpolatedColours(RGB565 left, RGB565 right, Span<TColor> colors)
         {
             left.ToRGBA(ref colors[0]);
             right.ToRGBA(ref colors[1]);
@@ -105,36 +110,7 @@ namespace AuroraLib.Pixel.BlockProcessor
             }
         }
 
-        internal static void GetDominantColors(ReadOnlySpan<TColor> pixels, out RGB565 color0, out RGB565 color1, byte alphaThreshold = DefaultAlphaThreshold)
-        {
-            bool NeedsAlphaColor = false;
-            Vector3 minVec = new Vector3(float.MaxValue);
-            Vector3 maxVec = new Vector3(float.MinValue);
-
-            for (int i = 0; i < pixels.Length; i++)
-            {
-                if (pixels[i].A < alphaThreshold)
-                {
-                    NeedsAlphaColor = true;
-                    continue;
-                }
-                // can be improved!
-                Vector3 pixelVec = new Vector3(pixels[i].R / 255f, pixels[i].G / 255f, pixels[i].B / 255f);
-                minVec = Vector3.Min(minVec, pixelVec);
-                maxVec = Vector3.Max(maxVec, pixelVec);
-            }
-
-            color0 = new RGB565((byte)(minVec.X * 255f), (byte)(minVec.Y * 255f), (byte)(minVec.Z * 255f));
-            color1 = new RGB565((byte)(maxVec.X * 255f), (byte)(maxVec.Y * 255f), (byte)(maxVec.Z * 255f));
-
-            //Needs Alpha Color?
-            if ((NeedsAlphaColor && (ushort)(color0) > (ushort)(color1)) || (!NeedsAlphaColor && (ushort)(color0) < (ushort)(color1)))
-            {
-                (color0, color1) = (color1, color0);
-            }
-        }
-
-        internal static int GetColorIndex(TColor pixel, ReadOnlySpan<TColor> colors, byte alphaThreshold = DefaultAlphaThreshold)
+        static int GetColorIndex(TColor pixel, ReadOnlySpan<TColor> colors, byte alphaThreshold)
         {
             int minDistance = int.MaxValue, colorIndex = 0;
 
@@ -164,6 +140,73 @@ namespace AuroraLib.Pixel.BlockProcessor
                 int dg = c1.G - c2.G;
                 int db = c1.B - c2.B;
                 return dr * dr + dg * dg + db * db;
+            }
+        }
+
+        /// <summary>
+        /// Provides the two dominant colors (endpoints) of a 4x4 pixel block in RGB565 format.
+        /// </summary>
+        public interface IColorSelector
+        {
+            /// <summary>
+            /// Alpha threshold for transparent pixels.
+            /// </summary>
+            byte AlphaThreshold { get; }
+
+            /// <summary>
+            /// Calculates the two dominant colors (endpoints) of a pixel block.
+            /// </summary>
+            /// <param name="pixels">Block pixel data</param>
+            /// <param name="stride">Row width of the block</param>
+            /// <param name="color0">First endpoint (lighter or higher value)</param>
+            /// <param name="color1">Second endpoint (darker or lower value)</param>
+            void GetEndpoints(ReadOnlySpan<TColor> pixels, int stride, out RGB565 color0, out RGB565 color1);
+        }
+
+        /// <summary>
+        /// Quickly computes the RGB565 min and max colors of a 4x4 pixel block, representing its color bounding box.
+        /// </summary>
+        public sealed class BoundingBoxColorEncoder : IColorSelector
+        {
+            /// <inheritdoc/>
+            public byte AlphaThreshold { get; }
+
+            public BoundingBoxColorEncoder(byte alphaThreshold = 32)
+                => AlphaThreshold = alphaThreshold;
+
+            /// <inheritdoc/>
+            public void GetEndpoints(ReadOnlySpan<TColor> pixels, int stride, out RGB565 color0, out RGB565 color1)
+            {
+                bool NeedsAlphaColor = false;
+                Vector3 minVec = new Vector3(255);
+                Vector3 maxVec = new Vector3(0);
+
+                for (int y = 0; y < BlockSize; y++)
+                {
+                    for (int x = 0; x < BlockSize; x++)
+                    {
+                        int i = y * stride + x;
+
+                        if (pixels[i].A < AlphaThreshold)
+                        {
+                            NeedsAlphaColor = true;
+                            continue;
+                        }
+
+                        Vector3 pixelVec = new Vector3(pixels[i].R, pixels[i].G, pixels[i].B);
+                        minVec = Vector3.Min(minVec, pixelVec);
+                        maxVec = Vector3.Max(maxVec, pixelVec);
+                    }
+                }
+
+                color0 = new RGB565((byte)minVec.X, (byte)minVec.Y, (byte)minVec.Z);
+                color1 = new RGB565((byte)maxVec.X, (byte)maxVec.Y, (byte)maxVec.Z);
+
+                //Needs Alpha Color?
+                if (NeedsAlphaColor != ((ushort)color0 < (ushort)color1))
+                {
+                    (color0, color1) = (color1, color0);
+                }
             }
         }
     }
