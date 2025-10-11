@@ -6,7 +6,7 @@
 	  <ImplicitUsings>disable</ImplicitUsings>
 	  <Nullable>enable</Nullable>
 	  <Title>AuroraLib.Pixel.ImageSharpExtension</Title>
-	  <Version>1.1.0</Version>
+	  <Version>1.2.0</Version>
 	  <AssemblyVersion>$(Version)</AssemblyVersion>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
 	  <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
@@ -48,7 +48,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Configuration)' == 'Release'">
-	  <PackageReference Include="AuroraLib.Pixel" Version="1.1.0" />
+	  <PackageReference Include="AuroraLib.Pixel" Version="1.2.0" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Configuration)' != 'Release'">
