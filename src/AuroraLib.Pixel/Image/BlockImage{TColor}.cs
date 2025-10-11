@@ -4,7 +4,6 @@ using AuroraLib.Pixel.Processing;
 using AuroraLib.Pixel.Processing.Processor;
 using System;
 using System.Buffers;
-using System.Diagnostics;
 using System.Drawing;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -185,6 +184,8 @@ namespace AuroraLib.Pixel.Image
         }
 
         IImage IReadOnlyImage.Clone() => Clone();
+
+        IImage<TColor> IReadOnlyImage<TColor>.Create(int width, int height) => new BlockImage<TColor>(_block, width, height);
 
         /// <inheritdoc/>
         public Span<TColor> GetWritableRow(int y)

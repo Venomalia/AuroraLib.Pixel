@@ -245,6 +245,8 @@ namespace AuroraLib.Pixel.Image
 
         IImage IReadOnlyImage.Clone() => Clone();
 
+        IImage<TColor> IReadOnlyImage<TColor>.Create(int width, int height) => new PaletteImage<TIndex, TColor>(_image.Create(width, height), Palette);
+
         /// <inheritdoc/>
         public void Apply(IPixelProcessor processor) => processor.Apply(this);
 
