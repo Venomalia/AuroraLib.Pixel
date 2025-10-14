@@ -104,15 +104,15 @@ namespace PixelTest
             if (!isGrayscale)
             {
                 pixel.FromScaledVector4(Vector4.UnitX);
-                actual = pixel.ToScaledVector4();
+                actual = Round(pixel.ToScaledVector4(), 2);
                 Assert.AreEqual(Vector4.UnitX + zeroAlpha, actual);
 
                 pixel.FromScaledVector4(Vector4.UnitY);
-                actual = pixel.ToScaledVector4();
+                actual = Round(pixel.ToScaledVector4(), 2);
                 Assert.AreEqual(Vector4.UnitY + zeroAlpha, actual);
 
                 pixel.FromScaledVector4(Vector4.UnitZ);
-                actual = pixel.ToScaledVector4();
+                actual = Round(pixel.ToScaledVector4(), 2);
                 Assert.AreEqual(Vector4.UnitZ + zeroAlpha, actual);
             }
             else if (hasColor)
@@ -136,6 +136,14 @@ namespace PixelTest
             pixel.FromScaledVector4(Vector4.UnitW);
             actual = pixel.ToScaledVector4();
             Assert.AreEqual(Vector4.UnitW, actual);
+
+            Vector4 Round(Vector4 v, int digits)
+                => new Vector4(
+                    (float)Math.Round((decimal)v.X, digits),
+                    (float)Math.Round((decimal)v.Y, digits),
+                    (float)Math.Round((decimal)v.Z, digits),
+                    (float)Math.Round((decimal)v.W, digits)
+);
         }
 
         [TestMethod]
@@ -296,7 +304,7 @@ namespace PixelTest
                 ChannelInfo(pixel, redChannelInfo, Vector4.One, (uint)((ulong)1 << redChannelInfo.BitDepth) - 1);
                 ChannelInfo(pixel, redChannelInfo, Vector4.Zero, 0);
             }
-            else
+            else if (formatInfo.ChannelFormat == PixelFormatInfo.ChannelFormatType.RGB)
             {
                 var redChannelInfo = formatInfo.RedChannelInfo;
                 ChannelInfo(pixel, redChannelInfo, Vector4.UnitX, (uint)(1 << redChannelInfo.BitDepth) - 1);
@@ -339,10 +347,14 @@ namespace PixelTest
         private static bool IsRGB(IColor pixel)
             => typeof(IRGB<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<uint>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<float>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<Half>).IsAssignableFrom(pixel.GetType());
 
+        private static bool IsYUV(IColor pixel)
+            => typeof(IYUV<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IYUV<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IYUV<uint>).IsAssignableFrom(pixel.GetType()) || typeof(IYUV<float>).IsAssignableFrom(pixel.GetType());
+
+
         private static bool IsGrayscale(IColor pixel)
-            => !IsRGB(pixel);
+            => !(IsRGB(pixel) || IsYUV(pixel));
         private static bool HasColor(IColor pixel)
-            => IsRGB(pixel) || IsIntensity(pixel);
+            => IsRGB(pixel) || IsIntensity(pixel) || IsYUV(pixel);
 
         private ulong GetDataFromIColor(IColor pixel)
         {

@@ -17,7 +17,12 @@
         /// <summary>
         /// Indicates whether the pixel format has dynamic channel.
         /// </summary>
-        public bool HasDynamicChannel { get; }
+        public readonly bool HasDynamicChannel;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public readonly ChannelFormatType ChannelFormat;
 
         /// <summary>
         /// Info for red channel.
@@ -54,7 +59,7 @@
         /// </summary>
         public readonly bool IsGrayscale => RedMaskShift == GreenMaskShift && RedMaskShift == BlueMaskShift;
 
-        public PixelFormatInfo(byte bitsPerPixel, byte redDepth, byte redMaskShift, byte greenDepth, byte greenMaskShift, byte blueDepth, byte blueMaskShift, byte alphaDepth = 0, byte alphaMaskShift = 0, bool isDynamic = false)
+        public PixelFormatInfo(byte bitsPerPixel, byte redDepth, byte redMaskShift, byte greenDepth, byte greenMaskShift, byte blueDepth, byte blueMaskShift, byte alphaDepth = 0, byte alphaMaskShift = 0, bool isDynamic = false, ChannelFormatType pixelFormat = default)
         {
             BitsPerPixel = bitsPerPixel;
             RedDepth = redDepth;
@@ -66,9 +71,10 @@
             BlueMaskShift = blueMaskShift;
             AlphaMaskShift = alphaMaskShift;
             HasDynamicChannel = isDynamic;
+            ChannelFormat = pixelFormat;
         }
 
-        public PixelFormatInfo(byte bitsPerPixel, ulong redMask, ulong greenMask, ulong blueMask, ulong alphaMask = 0)
+        public PixelFormatInfo(byte bitsPerPixel, ulong redMask, ulong greenMask, ulong blueMask, ulong alphaMask = 0, ChannelFormatType pixelFormat = default)
         {
             BitsPerPixel = bitsPerPixel;
             ChannelInfo red = new ChannelInfo(redMask);
@@ -84,6 +90,33 @@
             AlphaDepth = alpha.BitDepth;
             AlphaMaskShift = alpha.Shift;
             HasDynamicChannel = false;
+            ChannelFormat = pixelFormat;
+        }
+
+        /// <summary>
+        /// Specifies the type of pixel format used for color representation.
+        /// </summary>
+        public enum ChannelFormatType : byte
+        {
+            /// <summary>
+            /// Red-Green-Blue color format, commonly used in displays and images.
+            /// </summary>
+            RGB = default,
+            /// <summary>
+            /// YUV color format, separates luminance (Y) from chrominance (U and V), used in video compression and broadcasting.
+            /// R channel info stores Y (luminance), 
+            /// G channel info stores U (chrominance blue), 
+            /// B channel info stores V (chrominance red).
+            /// </summary>
+            YUV,
+            /// <summary>
+            /// Cyan-Magenta-Yellow-Black color format, primarily used in printing.
+            /// R channel info stores C, 
+            /// G channel info stores M, 
+            /// B channel info stores Y,
+            /// A channel info stores K.
+            /// </summary>
+            CMYK,
         }
     }
 }
