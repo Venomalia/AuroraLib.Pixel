@@ -1,15 +1,14 @@
 ﻿using System.Numerics;
-using System.Runtime.CompilerServices;
 
 namespace AuroraLib.Pixel.PixelFormats
 {
     /// <summary>
-    /// 
+    /// Represents a 96-bit RGB color using 32-bit floating-point channels.
     /// </summary>
-    public struct RGBAf32 : IRGBA<float>, IColor<RGBAf32>
+    public struct RGBf96 : IRGB<float>, IColor<RGBf96>
     {
         /// <inheritdoc cref="IColor.FormatInfo"/>
-        public static readonly PixelFormatInfo FormatInfo = new PixelFormatInfo(128, 32, 0, 32, 32, 32, 64, 32, 96);
+        public static readonly PixelFormatInfo FormatInfo = new PixelFormatInfo(96, 32, 0, 32, 32, 32, 64, 0, 0, PixelFormatInfo.ColorSpaceType.RGB, PixelFormatInfo.ChannelType.Float);
         readonly PixelFormatInfo IColor.FormatInfo => FormatInfo;
 
         /// <inheritdoc/>
@@ -19,20 +18,24 @@ namespace AuroraLib.Pixel.PixelFormats
         /// <inheritdoc/>
         public float B { readonly get; set; }
         /// <inheritdoc/>
-        public float A { readonly get; set; }
+        public readonly float A => 1f;
 
-        float IColor.Mask { readonly get => A; set => A = value; }
+        float IColor.Mask
+        {
+            readonly get => Help.BT709Luminance(ToScaledVector4());
+            set => B = G = R = value;
+        }
 
-        public RGBAf32(float r, float g, float b, float a)
+
+        public RGBf96(float r, float g, float b)
         {
             R = r;
             G = g;
             B = b;
-            A = a;
         }
 
         /// <inheritdoc/>
-        public readonly Vector4 ToScaledVector4() => (Vector4)this;
+        public readonly Vector4 ToScaledVector4() => new Vector4(R, G, B, 1f);
 
         /// <inheritdoc/>
         public void FromScaledVector4(Vector4 vector)
@@ -40,16 +43,15 @@ namespace AuroraLib.Pixel.PixelFormats
             R = vector.X;
             G = vector.Y;
             B = vector.Z;
-            A = vector.W;
         }
 
         /// <inheritdoc/>
         public readonly void ToRGBA<TColor>(ref TColor value) where TColor : IRGBA<byte>
-            => value.FromScaledVector4(this);
+            => value.FromScaledVector4(ToScaledVector4());
 
         /// <inheritdoc/>
-        public readonly bool Equals(RGBAf32 other)
-            => (Vector4)this == (Vector4)other;
+        public readonly bool Equals(RGBf96 other)
+            => ToScaledVector4() == other.ToScaledVector4();
 
         /// <inheritdoc/>
         public void From16Bit<TColor>(TColor value) where TColor : IRGB<ushort>
@@ -60,9 +62,7 @@ namespace AuroraLib.Pixel.PixelFormats
             => FromScaledVector4(value.ToScaledVector4());
 
         /// <inheritdoc/>
-        public override readonly string ToString() => $"{nameof(RGBAf32)}({R}, {G}, {B}, {A})";
+        public override readonly string ToString() => $"{nameof(RGBf96)}({R}, {G}, {B})";
 
-        public static implicit operator RGBAf32(Vector4 value) => Unsafe.As<Vector4, RGBAf32>(ref value);
-        public static implicit operator Vector4(RGBAf32 value) => Unsafe.As<RGBAf32, Vector4>(ref value);
     }
 }

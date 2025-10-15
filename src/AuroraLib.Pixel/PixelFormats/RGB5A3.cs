@@ -9,7 +9,7 @@ namespace AuroraLib.Pixel.PixelFormats
     public struct RGB5A3 : IRGBA<byte>, IColor<RGB5A3>
     {
         /// <inheritdoc cref="IColor.FormatInfo"/>
-        public static readonly PixelFormatInfo FormatInfo = new PixelFormatInfo(16, 5, 10, 5, 5, 5, 0, 1, 15, true);
+        public static readonly PixelFormatInfo FormatInfo = new PixelFormatInfo(16, 5, 10, 5, 5, 5, 0, 1, 15, PixelFormatInfo.ColorSpaceType.RGB, PixelFormatInfo.ChannelType.Dynamic);
         readonly PixelFormatInfo IColor.FormatInfo => FormatInfo;
 
         private const ushort AlphaMask = 0x8000;

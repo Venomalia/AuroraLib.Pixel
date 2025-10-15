@@ -9,7 +9,7 @@ namespace AuroraLib.Pixel.PixelFormats
     public struct AYUV : IYUV<byte>, IAlpha<byte>, IColor<AYUV>
     {
         /// <inheritdoc cref="IColor.FormatInfo"/>
-        public static readonly PixelFormatInfo FormatInfo = new PixelFormatInfo(32, 8, 16, 8, 8, 8, 0, 8, 24, false, PixelFormatInfo.ChannelFormatType.YUV);
+        public static readonly PixelFormatInfo FormatInfo = new PixelFormatInfo(32, 8, 16, 8, 8, 8, 0, 8, 24, PixelFormatInfo.ColorSpaceType.YUV);
         readonly PixelFormatInfo IColor.FormatInfo => FormatInfo;
 
         /// <inheritdoc/>

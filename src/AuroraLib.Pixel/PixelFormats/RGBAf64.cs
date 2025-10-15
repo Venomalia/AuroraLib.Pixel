@@ -5,12 +5,12 @@ using System.Runtime.CompilerServices;
 namespace AuroraLib.Pixel.PixelFormats
 {
     /// <summary>
-    /// 
+    /// Represents a 64-bit RGBA color using 16-bit half-precision float channels.
     /// </summary>
-    public struct RGBAf16 : IRGBA<Half>, IColor<RGBAf16>
+    public struct RGBAf64 : IRGBA<Half>, IColor<RGBAf64>
     {
         /// <inheritdoc cref="IColor.FormatInfo"/>
-        public static readonly PixelFormatInfo FormatInfo = new PixelFormatInfo(64, 16, 0, 16, 16, 16, 32, 16, 48);
+        public static readonly PixelFormatInfo FormatInfo = new PixelFormatInfo(64, 16, 0, 16, 16, 16, 32, 16, 48, PixelFormatInfo.ColorSpaceType.RGB, PixelFormatInfo.ChannelType.Float);
         readonly PixelFormatInfo IColor.FormatInfo => FormatInfo;
 
         /// <inheritdoc/>
@@ -49,11 +49,11 @@ namespace AuroraLib.Pixel.PixelFormats
             => FromScaledVector4(value.ToScaledVector4());
 
         /// <inheritdoc/>
-        public bool Equals(RGBAf16 other)
-            => Unsafe.As<RGBAf16, ulong>(ref this) == Unsafe.As<RGBAf16, ulong>(ref other);
+        public bool Equals(RGBAf64 other)
+            => Unsafe.As<RGBAf64, ulong>(ref this) == Unsafe.As<RGBAf64, ulong>(ref other);
 
 
         /// <inheritdoc/>
-        public override readonly string ToString() => $"{nameof(RGBAf16)}({R}, {G}, {B}, {A})";
+        public override readonly string ToString() => $"{nameof(RGBAf64)}({R}, {G}, {B}, {A})";
     }
 }

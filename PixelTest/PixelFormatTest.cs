@@ -295,7 +295,14 @@ namespace PixelTest
             int size = Marshal.SizeOf(pixel.GetType());
             Assert.AreEqual(size, (formatInfo.BitsPerPixel + 7) / 8);
 
-            if (formatInfo.HasDynamicChannel || IsFloat(pixel))
+            bool isFloat = IsFloat(pixel);
+            Assert.AreEqual(isFloat, formatInfo.Type == PixelFormatInfo.ChannelType.Float);
+
+
+            bool isYUV = IsYUV(pixel);
+            Assert.AreEqual(isYUV, formatInfo.ColorSpace == PixelFormatInfo.ColorSpaceType.YUV);
+
+            if (formatInfo.Type == PixelFormatInfo.ChannelType.Dynamic || formatInfo.Type == PixelFormatInfo.ChannelType.Float)
                 return;
 
             if (isGrayscale)
@@ -304,7 +311,7 @@ namespace PixelTest
                 ChannelInfo(pixel, redChannelInfo, Vector4.One, (uint)((ulong)1 << redChannelInfo.BitDepth) - 1);
                 ChannelInfo(pixel, redChannelInfo, Vector4.Zero, 0);
             }
-            else if (formatInfo.ChannelFormat == PixelFormatInfo.ChannelFormatType.RGB)
+            else if (formatInfo.ColorSpace == PixelFormatInfo.ColorSpaceType.RGB)
             {
                 var redChannelInfo = formatInfo.RedChannelInfo;
                 ChannelInfo(pixel, redChannelInfo, Vector4.UnitX, (uint)(1 << redChannelInfo.BitDepth) - 1);
@@ -336,13 +343,13 @@ namespace PixelTest
         }
 
         private static bool IsFloat(IColor pixel)
-            => typeof(IAlpha<Half>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<float>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<Half>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<float>).IsAssignableFrom(pixel.GetType());
+            => typeof(IAlpha<Half>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<float>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<Half>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<float>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<float>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<Half>).IsAssignableFrom(pixel.GetType());
 
         private static bool HasAlpha(IColor pixel)
             => typeof(IAlpha<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<uint>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<float>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<Half>).IsAssignableFrom(pixel.GetType());
 
         private static bool IsIntensity(IColor pixel)
-            => typeof(IIntensity<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<uint>).IsAssignableFrom(pixel.GetType());
+            => typeof(IIntensity<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<uint>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<float>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<Half>).IsAssignableFrom(pixel.GetType());
 
         private static bool IsRGB(IColor pixel)
             => typeof(IRGB<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<uint>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<float>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<Half>).IsAssignableFrom(pixel.GetType());

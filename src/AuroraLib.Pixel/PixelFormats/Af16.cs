@@ -9,7 +9,7 @@ namespace AuroraLib.Pixel.PixelFormats
     public struct Af16 : IAlpha<Half>, IColor<Af16>
     {
         /// <inheritdoc cref="IColor.FormatInfo"/>
-        public static readonly PixelFormatInfo FormatInfo = new PixelFormatInfo(16, 0, 0, 0, 0, 0, 0, 16, 0);
+        public static readonly PixelFormatInfo FormatInfo = new PixelFormatInfo(16, 0, 0, 0, 0, 0, 0, 16, 0, PixelFormatInfo.ColorSpaceType.RGB, PixelFormatInfo.ChannelType.Float);
         readonly PixelFormatInfo IColor.FormatInfo => FormatInfo;
 
         /// <inheritdoc/>

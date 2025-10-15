@@ -15,14 +15,14 @@
         public readonly byte BitsPerPixel;
 
         /// <summary>
-        /// Indicates whether the pixel format has dynamic channel.
+        /// The data type used by all channels in this pixel format.
         /// </summary>
-        public readonly bool HasDynamicChannel;
+        public readonly ChannelType Type;
 
         /// <summary>
-        /// 
+        /// The color space of this pixel.
         /// </summary>
-        public readonly ChannelFormatType ChannelFormat;
+        public readonly ColorSpaceType ColorSpace;
 
         /// <summary>
         /// Info for red channel.
@@ -59,7 +59,7 @@
         /// </summary>
         public readonly bool IsGrayscale => RedMaskShift == GreenMaskShift && RedMaskShift == BlueMaskShift;
 
-        public PixelFormatInfo(byte bitsPerPixel, byte redDepth, byte redMaskShift, byte greenDepth, byte greenMaskShift, byte blueDepth, byte blueMaskShift, byte alphaDepth = 0, byte alphaMaskShift = 0, bool isDynamic = false, ChannelFormatType pixelFormat = default)
+        public PixelFormatInfo(byte bitsPerPixel, byte redDepth, byte redMaskShift, byte greenDepth, byte greenMaskShift, byte blueDepth, byte blueMaskShift, byte alphaDepth = 0, byte alphaMaskShift = 0, ColorSpaceType colorSpace = default, ChannelType type = default)
         {
             BitsPerPixel = bitsPerPixel;
             RedDepth = redDepth;
@@ -70,11 +70,11 @@
             GreenMaskShift = greenMaskShift;
             BlueMaskShift = blueMaskShift;
             AlphaMaskShift = alphaMaskShift;
-            HasDynamicChannel = isDynamic;
-            ChannelFormat = pixelFormat;
+            ColorSpace = colorSpace;
+            Type = type;
         }
 
-        public PixelFormatInfo(byte bitsPerPixel, ulong redMask, ulong greenMask, ulong blueMask, ulong alphaMask = 0, ChannelFormatType pixelFormat = default)
+        public PixelFormatInfo(byte bitsPerPixel, ulong redMask, ulong greenMask, ulong blueMask, ulong alphaMask = 0, ColorSpaceType colorSpace = default, ChannelType type = default)
         {
             BitsPerPixel = bitsPerPixel;
             ChannelInfo red = new ChannelInfo(redMask);
@@ -89,14 +89,31 @@
             ChannelInfo alpha = new ChannelInfo(alphaMask);
             AlphaDepth = alpha.BitDepth;
             AlphaMaskShift = alpha.Shift;
-            HasDynamicChannel = false;
-            ChannelFormat = pixelFormat;
+            ColorSpace = colorSpace;
+            Type = type;
+        }
+
+        /// <summary>
+        /// Specifies the numeric type of a color channel.
+        /// </summary>
+        public enum ChannelType : byte
+        {
+            /// <summary>Unsigned integer channel.</summary>
+            Unsigned = default,
+            /// <summary>Signed integer channel.</summary>
+            Signed,
+            /// <summary>Floating-point channel.</summary>
+            Float,
+            /// <summary>
+            /// Channel type determined at runtime; both type and bit depth may vary.
+            /// </summary>
+            Dynamic
         }
 
         /// <summary>
         /// Specifies the type of pixel format used for color representation.
         /// </summary>
-        public enum ChannelFormatType : byte
+        public enum ColorSpaceType : byte
         {
             /// <summary>
             /// Red-Green-Blue color format, commonly used in displays and images.
