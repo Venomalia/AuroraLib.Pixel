@@ -76,6 +76,7 @@ namespace AuroraLib.Pixel.ImageSharpExtension
                 Type t when t == typeof(Rgba1010102) => TryAsAuroraImage<RGB48>(image, out memoryImage),
                 Type t when t == typeof(Rgba32) => TryAsAuroraImage<RGBA32>(image, out memoryImage),
                 Type t when t == typeof(Rgba64) => TryAsAuroraImage<RGBA64>(image, out memoryImage),
+                Type t when t == typeof(Rg32) => TryAsAuroraImage<IA32>(image, out memoryImage),
                 _ => false,
             };
 

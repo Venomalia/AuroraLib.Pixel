@@ -6,7 +6,7 @@
 	  <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	  <Title>AuroraLib.Pixel</Title>
-	  <Version>1.2.0</Version>
+	  <Version>1.3.0</Version>
 	  <AssemblyVersion>$(Version)</AssemblyVersion>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
 	  <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
