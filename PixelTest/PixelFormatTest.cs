@@ -1,6 +1,8 @@
 ﻿using AuroraLib.Pixel;
 using AuroraLib.Pixel.PixelFormats;
+using AuroraLib.Pixel.PixelFormats.Wrapper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +14,68 @@ namespace PixelTest
     [TestClass]
     public class PixelFormatTest
     {
+        [DataTestMethod]
+        public void CheckSNORM_AreEqual()
+        {
+            SNORM<RGBA64> pixel = default;
+            SNORM<RGBA64> other = default;
+            pixel.FromScaledVector4(Vector4.One);
+            other.FromScaledVector4(Vector4.One);
+
+            Assert.AreEqual(pixel, other);
+        }
+
+        [DataTestMethod]
+        public void CheckSNORM_AreNotEqual()
+        {
+            SNORM<RGBA32> pixel = default;
+            SNORM<RGBA32> other = default;
+            pixel.FromScaledVector4(Vector4.One);
+            other.FromScaledVector4(Vector4.Zero);
+
+            Assert.AreNotEqual(pixel, other);
+        }
+
+        [DataTestMethod]
+        public void CheckSNORM_Accuracy_sbyte()
+        {
+            Span<sbyte> native = new sbyte[] { 0 };
+            Span<SNORM<I8>> wrapper = MemoryMarshal.Cast<sbyte, SNORM<I8>>(native);
+
+            for (int i = sbyte.MinValue; i < sbyte.MaxValue; i++)
+            {
+                native[0] = (sbyte)i;
+                float fixedVec = wrapper[0].ToScaledVector4().X;
+                float correct = ToSNORMFloat(native[0]);
+
+                // Check
+                var diff = Math.Abs(fixedVec - correct);
+                if (diff > 0.0000001)
+                    Assert.Fail();
+            }
+            static float ToSNORMFloat(sbyte s) => (s + 128f) / 255f;
+        }
+
+        [DataTestMethod]
+        public void CheckSNORM_Accuracy_short()
+        {
+            Span<short> native = new short[] { 0 };
+            Span<SNORM<I16>> wrapper = MemoryMarshal.Cast<short, SNORM<I16>>(native);
+
+            for (int i = short.MinValue; i < short.MaxValue; i++)
+            {
+                native[0] = (short)i;
+                float fixedVec = wrapper[0].ToScaledVector4().X;
+                float correct = ToSNORMFloat(native[0]);
+
+                // Check
+                var diff = Math.Abs(fixedVec - correct);
+                if (diff > 0.0000001)
+                    Assert.Fail();
+            }
+            static float ToSNORMFloat(short s) => (s + 32768f) / 65535f;
+        }
+
         [DataTestMethod]
         [DataRow("#FFfFFFFF", byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue)]
         [DataRow("00000000", byte.MinValue, byte.MinValue, byte.MinValue, byte.MinValue)]
@@ -47,7 +111,7 @@ namespace PixelTest
 
         public static IEnumerable<object[]> GetAvailablePixelFormats()
         {
-            IEnumerable<Type> availableAlgorithmTypes = AppDomain.CurrentDomain.GetAssemblies().Where(a => !a.IsDynamic).SelectMany(x => x.GetExportedTypes().Where(s => typeof(IColor).IsAssignableFrom(s) && !s.IsInterface && !s.IsAbstract));
+            IEnumerable<Type> availableAlgorithmTypes = AppDomain.CurrentDomain.GetAssemblies().Where(a => !a.IsDynamic).SelectMany(x => x.GetExportedTypes().Where(s => typeof(IColor).IsAssignableFrom(s) && !s.IsInterface && !s.IsAbstract && !s.ContainsGenericParameters));
             return availableAlgorithmTypes.Select(x => new object[] { (IColor)Activator.CreateInstance(x)! });
         }
 
