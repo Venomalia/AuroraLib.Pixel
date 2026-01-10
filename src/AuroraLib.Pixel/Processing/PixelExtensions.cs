@@ -1,9 +1,9 @@
 ﻿using AuroraLib.Pixel.PixelFormats;
 using AuroraLib.Pixel.PixelProcessor;
 using System;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 
 namespace AuroraLib.Pixel.Processing
 {
@@ -28,37 +28,37 @@ namespace AuroraLib.Pixel.Processing
             {
                 MemoryMarshal.Cast<TFrom, TTo>(sFrom).CopyTo(sTo);
             }
-            else if (typeof(TTo) == typeof(RGBA32))
+            else if (typeof(TTo) == typeof(RGBA<byte>))
             {
-                ToRGBA(sFrom, MemoryMarshal.Cast<TTo, RGBA32>(sTo));
+                ToRGBA(sFrom, MemoryMarshal.Cast<TTo, RGBA<byte>>(sTo));
             }
-            else if (typeof(TTo) == typeof(BGRA32))
+            else if (typeof(TTo) == typeof(BGRA<byte>))
             {
-                ToRGBA(sFrom, MemoryMarshal.Cast<TTo, BGRA32>(sTo));
+                ToRGBA(sFrom, MemoryMarshal.Cast<TTo, BGRA<byte>>(sTo));
             }
-            else if (typeof(TTo) == typeof(ARGB32))
+            else if (typeof(TTo) == typeof(ARGB<byte>))
             {
-                ToRGBA(sFrom, MemoryMarshal.Cast<TTo, ARGB32>(sTo));
+                ToRGBA(sFrom, MemoryMarshal.Cast<TTo, ARGB<byte>>(sTo));
             }
-            else if (typeof(TTo) == typeof(ABGR32))
+            else if (typeof(TTo) == typeof(ABGR<byte>))
             {
-                ToRGBA(sFrom, MemoryMarshal.Cast<TTo, ABGR32>(sTo));
+                ToRGBA(sFrom, MemoryMarshal.Cast<TTo, ABGR<byte>>(sTo));
             }
-            else if (typeof(TFrom) == typeof(RGBA32))
+            else if (typeof(TFrom) == typeof(RGBA<byte>))
             {
-                ToFrom8Bit(MemoryMarshal.Cast<TFrom, RGBA32>(sFrom), sTo);
+                ToFrom8Bit(MemoryMarshal.Cast<TFrom, RGBA<byte>>(sFrom), sTo);
             }
-            else if (typeof(TFrom) == typeof(RGB24))
+            else if (typeof(TFrom) == typeof(RGB<byte>))
             {
-                ToFrom8Bit(MemoryMarshal.Cast<TFrom, RGB24>(sFrom), sTo);
+                ToFrom8Bit(MemoryMarshal.Cast<TFrom, RGB<byte>>(sFrom), sTo);
             }
-            else if (typeof(TFrom) == typeof(BGRA32))
+            else if (typeof(TFrom) == typeof(BGRA<byte>))
             {
-                ToFrom8Bit(MemoryMarshal.Cast<TFrom, BGRA32>(sFrom), sTo);
+                ToFrom8Bit(MemoryMarshal.Cast<TFrom, BGRA<byte>>(sFrom), sTo);
             }
-            else if (typeof(TFrom) == typeof(BGR24))
+            else if (typeof(TFrom) == typeof(BGR<byte>))
             {
-                ToFrom8Bit(MemoryMarshal.Cast<TFrom, BGR24>(sFrom), sTo);
+                ToFrom8Bit(MemoryMarshal.Cast<TFrom, BGR<byte>>(sFrom), sTo);
             }
             else
             {

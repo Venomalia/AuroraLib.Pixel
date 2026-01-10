@@ -59,11 +59,11 @@ namespace AuroraLib.Pixel.PixelFormats
 
         /// <inheritdoc/>
         public void From8Bit<TColor>(TColor value) where TColor : IRGB<byte>
-            => I = Help.BT709Luminance8Bit(value) >> 4;
+            => I = Help.BT709Luminance(value.R, value.G, value.B) >> 4;
 
         /// <inheritdoc/>
         public void From16Bit<TColor>(TColor value) where TColor : IRGB<ushort>
-            => I = Help.BT709Luminance16Bit(value) >> 12;
+            => I = Help.BT709Luminance(value.R, value.G, value.B) >> 12;
 
         /// <inheritdoc/>
         public readonly bool Equals(I4 other) => I == other.I;

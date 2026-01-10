@@ -1,9 +1,10 @@
 ﻿using AuroraLib.Pixel.BitmapExtension;
 using AuroraLib.Pixel.Image;
-using AuroraLib.Pixel.PixelFormats;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Drawing;
 using System.Drawing.Imaging;
+using BGRA32 = AuroraLib.Pixel.PixelFormats.BGRA<byte>;
+using RGBA32 = AuroraLib.Pixel.PixelFormats.RGBA<byte>;
 
 namespace PixelTest
 {

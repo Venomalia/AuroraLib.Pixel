@@ -10,8 +10,6 @@ namespace AuroraLib.Pixel
     public interface IIntensity<TValue> : IColor where TValue : unmanaged, IEquatable<TValue>, IComparable<TValue>
 #if NET8_0_OR_GREATER
         , ISpanFormattable, IMinMaxValue<TValue>
-#elif NET6_0_OR_GREATER
-        , ISpanFormattable
 #endif
     {
         /// <summary>

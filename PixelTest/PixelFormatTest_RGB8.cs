@@ -11,11 +11,25 @@ namespace PixelTest
     [TestClass]
     public class PixelFormatTest_RGB8
     {
-
         public static IEnumerable<object[]> GetAvailablePixelFormats()
         {
             IEnumerable<Type> availableAlgorithmTypes = AppDomain.CurrentDomain.GetAssemblies().Where(a => !a.IsDynamic).SelectMany(x => x.GetExportedTypes().Where(s => typeof(IRGB<byte>).IsAssignableFrom(s) && !s.IsInterface && !s.IsAbstract));
-            return availableAlgorithmTypes.Select(x => new object[] { (IColor)Activator.CreateInstance(x)! });
+            var types = availableAlgorithmTypes.Select(x => new object[] { (IColor)Activator.CreateInstance(x)! }).ToList();
+            Add<byte>(types);
+            return types;
+
+            static void Add<TValue>(List<object[]> list) where TValue : unmanaged, IEquatable<TValue>, IComparable<TValue>
+#if NET8_0_OR_GREATER
+                , ISpanFormattable, IMinMaxValue<TValue>, INumber<TValue>
+#endif
+            {
+                list.Add(new object[] { new RGB<TValue>() });
+                list.Add(new object[] { new BGR<TValue>() });
+                list.Add(new object[] { new RGBA<TValue>() });
+                list.Add(new object[] { new BGRA<TValue>() });
+                list.Add(new object[] { new ARGB<TValue>() });
+                list.Add(new object[] { new ABGR<TValue>() });
+            }
         }
 
         [TestMethod]

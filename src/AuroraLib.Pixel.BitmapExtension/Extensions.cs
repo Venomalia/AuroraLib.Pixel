@@ -19,15 +19,15 @@ namespace AuroraLib.Pixel.BitmapExtension
         {
             //PixelFormat.Format1bppIndexed => throw new NotImplementedException(),
             //PixelFormat.Format4bppIndexed => throw new NotImplementedException(),
-            PixelFormat.Format8bppIndexed => AsAuroraPaletteImage<I8>(bitmap),
-            PixelFormat.Format16bppGrayScale => AsAuroraImage<I16>(bitmap),
+            PixelFormat.Format8bppIndexed => AsAuroraPaletteImage<I<byte>>(bitmap),
+            PixelFormat.Format16bppGrayScale => AsAuroraImage<I<ushort>>(bitmap),
             PixelFormat.Format16bppRgb555 => AsAuroraImage<RGB555>(bitmap),
             PixelFormat.Format16bppRgb565 => AsAuroraImage<RGB565>(bitmap),
             PixelFormat.Format16bppArgb1555 => AsAuroraImage<ARGB1555>(bitmap),
-            PixelFormat.Format24bppRgb => AsAuroraImage<BGR24>(bitmap),
-            PixelFormat.Format32bppRgb => AsAuroraImage<BGRA32>(bitmap),
-            PixelFormat.Format32bppArgb => AsAuroraImage<BGRA32>(bitmap),
-            PixelFormat.Format32bppPArgb => AsAuroraImage<BGRA32>(bitmap),
+            PixelFormat.Format24bppRgb => AsAuroraImage<BGR<byte>>(bitmap),
+            PixelFormat.Format32bppRgb => AsAuroraImage<BGRA<byte>>(bitmap),
+            PixelFormat.Format32bppArgb => AsAuroraImage<BGRA<byte>>(bitmap),
+            PixelFormat.Format32bppPArgb => AsAuroraImage<BGRA<byte>>(bitmap),
             //PixelFormat.Format48bppRgb => AsAuroraImage<BGR48>(bitmap), // it's not 48 bpp, but rather 39 bpp with a gamma of 1!
             //PixelFormat.Format64bppArgb => AsAuroraImage<BGRA64>(bitmap), // Same here.
             //PixelFormat.Format64bppPArgb => AsAuroraImage<BGRA64>(bitmap), // Same here.
@@ -56,13 +56,13 @@ namespace AuroraLib.Pixel.BitmapExtension
             return new MemoryImage<TColor>(data, data.Data.Width, data.Data.Height, data.Data.Stride / Unsafe.SizeOf<TColor>());
         }
 
-        private static PaletteImage<TColor, BGRA32> AsAuroraPaletteImage<TColor>(Bitmap bitmap) where TColor : unmanaged, IColor<TColor>, IIndexColor
+        private static PaletteImage<TColor, BGRA<byte>> AsAuroraPaletteImage<TColor>(Bitmap bitmap) where TColor : unmanaged, IColor<TColor>, IIndexColor
         {
             var data = new BitmapMemoryManager<TColor>(bitmap);
             var imageData = new MemoryImage<TColor>(data, data.Data.Width, data.Data.Height, data.Data.Stride / Unsafe.SizeOf<TColor>());
             var bitmapPalette = bitmap.Palette.Entries.AsSpan();
 
-            var paletteImage = new PaletteImage<TColor, BGRA32>(imageData, bitmapPalette.Length);
+            var paletteImage = new PaletteImage<TColor, BGRA<byte>>(imageData, bitmapPalette.Length);
             var auroraPalette = paletteImage.Palette;
             for (int i = 0; i < bitmapPalette.Length; i++)
                 auroraPalette[i] = bitmapPalette[i];
@@ -71,7 +71,7 @@ namespace AuroraLib.Pixel.BitmapExtension
             return paletteImage;
         }
 
-        private static void UpdateBitmapPalette(Bitmap bitmap, IPaletteImage<BGRA32> paletteImage)
+        private static void UpdateBitmapPalette(Bitmap bitmap, IPaletteImage<BGRA<byte>> paletteImage)
         {
             var bitmapPalette = bitmap.Palette; // clone of the palette!
 

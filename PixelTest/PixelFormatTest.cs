@@ -1,81 +1,19 @@
 ﻿using AuroraLib.Pixel;
 using AuroraLib.Pixel.PixelFormats;
-using AuroraLib.Pixel.PixelFormats.Wrapper;
+using AuroraLib.Pixel.Processing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using RGBA32 = AuroraLib.Pixel.PixelFormats.RGBA<byte>;
 
 namespace PixelTest
 {
     [TestClass]
     public class PixelFormatTest
     {
-        [DataTestMethod]
-        public void CheckSNORM_AreEqual()
-        {
-            SNORM<RGBA64> pixel = default;
-            SNORM<RGBA64> other = default;
-            pixel.FromScaledVector4(Vector4.One);
-            other.FromScaledVector4(Vector4.One);
-
-            Assert.AreEqual(pixel, other);
-        }
-
-        [DataTestMethod]
-        public void CheckSNORM_AreNotEqual()
-        {
-            SNORM<RGBA32> pixel = default;
-            SNORM<RGBA32> other = default;
-            pixel.FromScaledVector4(Vector4.One);
-            other.FromScaledVector4(Vector4.Zero);
-
-            Assert.AreNotEqual(pixel, other);
-        }
-
-        [DataTestMethod]
-        public void CheckSNORM_Accuracy_sbyte()
-        {
-            Span<sbyte> native = new sbyte[] { 0 };
-            Span<SNORM<I8>> wrapper = MemoryMarshal.Cast<sbyte, SNORM<I8>>(native);
-
-            for (int i = sbyte.MinValue; i < sbyte.MaxValue; i++)
-            {
-                native[0] = (sbyte)i;
-                float fixedVec = wrapper[0].ToScaledVector4().X;
-                float correct = ToSNORMFloat(native[0]);
-
-                // Check
-                var diff = Math.Abs(fixedVec - correct);
-                if (diff > 0.0000001)
-                    Assert.Fail();
-            }
-            static float ToSNORMFloat(sbyte s) => (s + 128f) / 255f;
-        }
-
-        [DataTestMethod]
-        public void CheckSNORM_Accuracy_short()
-        {
-            Span<short> native = new short[] { 0 };
-            Span<SNORM<I16>> wrapper = MemoryMarshal.Cast<short, SNORM<I16>>(native);
-
-            for (int i = short.MinValue; i < short.MaxValue; i++)
-            {
-                native[0] = (short)i;
-                float fixedVec = wrapper[0].ToScaledVector4().X;
-                float correct = ToSNORMFloat(native[0]);
-
-                // Check
-                var diff = Math.Abs(fixedVec - correct);
-                if (diff > 0.0000001)
-                    Assert.Fail();
-            }
-            static float ToSNORMFloat(short s) => (s + 32768f) / 65535f;
-        }
-
         [DataTestMethod]
         [DataRow("#FFfFFFFF", byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue)]
         [DataRow("00000000", byte.MinValue, byte.MinValue, byte.MinValue, byte.MinValue)]
@@ -91,7 +29,8 @@ namespace PixelTest
         [DataRow("1234", (byte)0x11, (byte)0x22, (byte)0x33, (byte)0x44)]
         public void ParseHex(string hex, byte r, byte g, byte b, byte a)
         {
-            Assert.IsTrue(RGBA32.TryParseHex(hex, out RGBA32 result));
+            RGBA32 result = default;
+            Assert.IsTrue(result.TryParseHex(hex));
             var expected = new RGBA32(r, g, b, a);
 
             Assert.AreEqual(result, expected);
@@ -105,14 +44,61 @@ namespace PixelTest
         [DataRow("000000000000F")]
         public void ParseInvalidHex(string hex)
         {
-            Assert.IsFalse(RGBA32.TryParseHex(hex, out _));
-            Assert.ThrowsException<ArgumentException>(() => RGBA32.ParseHex(hex));
+            RGBA32 result = default;
+            Assert.IsFalse(result.TryParseHex(hex));
+            Assert.ThrowsException<FormatException>(() => result.ParseHex(hex));
+        }
+
+        [DataTestMethod]
+        [DataRow("#FFFFFFFF", byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, HexColorFormat.RRGGBBAA, true)]
+        [DataRow("00000000", byte.MinValue, byte.MinValue, byte.MinValue, byte.MinValue, HexColorFormat.RRGGBBAA, false)]
+        [DataRow("#FF0000", byte.MaxValue, byte.MinValue, byte.MinValue, byte.MaxValue, HexColorFormat.RRGGBB, true)]
+        [DataRow("#00FF00", byte.MinValue, byte.MaxValue, byte.MinValue, byte.MaxValue, HexColorFormat.RRGGBB, true)]
+        [DataRow("#0000FF", byte.MinValue, byte.MinValue, byte.MaxValue, byte.MaxValue, HexColorFormat.RRGGBB, true)]
+        [DataRow("#12345678", (byte)0x12, (byte)0x34, (byte)0x56, (byte)0x78, HexColorFormat.RRGGBBAA, true)]
+        [DataRow("#FFFF", byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, HexColorFormat.RGBA, true)]
+        [DataRow("#F00", byte.MaxValue, byte.MinValue, byte.MinValue, byte.MaxValue, HexColorFormat.RGB, true)]
+        [DataRow("0F0", byte.MinValue, byte.MaxValue, byte.MinValue, byte.MaxValue, HexColorFormat.RGB, false)]
+        [DataRow("#00F", byte.MinValue, byte.MinValue, byte.MaxValue, byte.MaxValue, HexColorFormat.RGB, true)]
+        [DataRow("000F", byte.MinValue, byte.MinValue, byte.MinValue, byte.MaxValue, HexColorFormat.RGBA, false)]
+        [DataRow("1234", (byte)0x11, (byte)0x22, (byte)0x33, (byte)0x44, HexColorFormat.RGBA, false)]
+        public void ToHex(string expectedHex, byte r, byte g, byte b, byte a, HexColorFormat format, bool prefix)
+        {
+            RGBA32 result = new RGBA32(r, g, b, a);
+            var resulthex = result.ToHex(format, prefix);
+
+            Assert.AreEqual(expectedHex, resulthex);
         }
 
         public static IEnumerable<object[]> GetAvailablePixelFormats()
         {
             IEnumerable<Type> availableAlgorithmTypes = AppDomain.CurrentDomain.GetAssemblies().Where(a => !a.IsDynamic).SelectMany(x => x.GetExportedTypes().Where(s => typeof(IColor).IsAssignableFrom(s) && !s.IsInterface && !s.IsAbstract && !s.ContainsGenericParameters));
-            return availableAlgorithmTypes.Select(x => new object[] { (IColor)Activator.CreateInstance(x)! });
+            var types = availableAlgorithmTypes.Select(x => new object[] { (IColor)Activator.CreateInstance(x)! }).ToList();
+            Add<byte>(types);
+            Add<sbyte>(types);
+            Add<ushort>(types);
+            Add<short>(types);
+            Add<int>(types);
+            Add<uint>(types);
+            Add<float>(types);
+            Add<Half>(types);
+            return types;
+
+            static void Add<TValue>(List<object[]> list) where TValue : unmanaged, IEquatable<TValue>, IComparable<TValue>
+#if NET8_0_OR_GREATER
+                , ISpanFormattable, IMinMaxValue<TValue>, INumber<TValue>
+#endif
+            {
+                list.Add(new object[] { new I<TValue>() });
+                list.Add(new object[] { new A<TValue>() });
+                list.Add(new object[] { new IA<TValue>() });
+                list.Add(new object[] { new RGB<TValue>() });
+                list.Add(new object[] { new BGR<TValue>() });
+                list.Add(new object[] { new RGBA<TValue>() });
+                list.Add(new object[] { new BGRA<TValue>() });
+                list.Add(new object[] { new ARGB<TValue>() });
+                list.Add(new object[] { new ABGR<TValue>() });
+            }
         }
 
         [TestMethod]
@@ -305,13 +291,12 @@ namespace PixelTest
             byte zeroAlpha = hasAlpha ? byte.MinValue : byte.MaxValue;
             byte maxColor = hasColor ? byte.MaxValue : byte.MinValue;
             RGBA32 actual = new RGBA32();
-            RGBA64 pixelRGBA64 = new RGBA64();
+            RGBA<ushort> pixelRGBA64 = new RGBA<ushort>();
 
             pixelRGBA64.FromScaledVector4(Vector4.One);
             pixel.From16Bit(pixelRGBA64);
             pixel.ToRGBA(ref actual);
             Assert.AreEqual(new RGBA32(maxColor, maxColor, maxColor, byte.MaxValue), actual);
-
 
             pixelRGBA64.FromScaledVector4(Vector4.Zero);
             pixel.From16Bit(pixelRGBA64);
@@ -356,17 +341,17 @@ namespace PixelTest
             bool isGrayscale = IsGrayscale(pixel);
             Assert.AreEqual(isGrayscale, formatInfo.IsGrayscale);
 
-            int size = Marshal.SizeOf(pixel.GetType());
-            Assert.AreEqual(size, (formatInfo.BitsPerPixel + 7) / 8);
-
             bool isFloat = IsFloat(pixel);
             Assert.AreEqual(isFloat, formatInfo.Type == PixelFormatInfo.ChannelType.Float);
-
 
             bool isYUV = IsYUV(pixel);
             Assert.AreEqual(isYUV, formatInfo.ColorSpace == PixelFormatInfo.ColorSpaceType.YUV);
 
-            if (formatInfo.Type == PixelFormatInfo.ChannelType.Dynamic || formatInfo.Type == PixelFormatInfo.ChannelType.Float)
+
+            int size = Marshal.SizeOf(pixel);
+            Assert.AreEqual(size, (formatInfo.BitsPerPixel + 7) / 8);
+
+            if (pixel.GetType().IsGenericType || formatInfo.Type == PixelFormatInfo.ChannelType.Dynamic || formatInfo.Type == PixelFormatInfo.ChannelType.Float)
                 return;
 
             if (isGrayscale)
@@ -409,14 +394,23 @@ namespace PixelTest
         private static bool IsFloat(IColor pixel)
             => typeof(IAlpha<Half>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<float>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<Half>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<float>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<float>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<Half>).IsAssignableFrom(pixel.GetType());
 
-        private static bool HasAlpha(IColor pixel)
-            => typeof(IAlpha<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<uint>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<float>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<Half>).IsAssignableFrom(pixel.GetType());
+        private static bool HasAlpha(IColor pixel) =>
+            typeof(IAlpha<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<sbyte>).IsAssignableFrom(pixel.GetType()) ||
+            typeof(IAlpha<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<short>).IsAssignableFrom(pixel.GetType()) ||
+            typeof(IAlpha<uint>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<int>).IsAssignableFrom(pixel.GetType()) ||
+            typeof(IAlpha<float>).IsAssignableFrom(pixel.GetType()) || typeof(IAlpha<Half>).IsAssignableFrom(pixel.GetType());
 
-        private static bool IsIntensity(IColor pixel)
-            => typeof(IIntensity<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<uint>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<float>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<Half>).IsAssignableFrom(pixel.GetType());
+        private static bool IsIntensity(IColor pixel) =>
+            typeof(IIntensity<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<sbyte>).IsAssignableFrom(pixel.GetType()) ||
+            typeof(IIntensity<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<short>).IsAssignableFrom(pixel.GetType()) ||
+            typeof(IIntensity<uint>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<int>).IsAssignableFrom(pixel.GetType()) ||
+            typeof(IIntensity<float>).IsAssignableFrom(pixel.GetType()) || typeof(IIntensity<Half>).IsAssignableFrom(pixel.GetType());
 
-        private static bool IsRGB(IColor pixel)
-            => typeof(IRGB<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<uint>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<float>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<Half>).IsAssignableFrom(pixel.GetType());
+        private static bool IsRGB(IColor pixel) =>
+            typeof(IRGB<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<sbyte>).IsAssignableFrom(pixel.GetType()) ||
+            typeof(IRGB<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<short>).IsAssignableFrom(pixel.GetType()) ||
+            typeof(IRGB<uint>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<int>).IsAssignableFrom(pixel.GetType()) ||
+            typeof(IRGB<float>).IsAssignableFrom(pixel.GetType()) || typeof(IRGB<Half>).IsAssignableFrom(pixel.GetType());
 
         private static bool IsYUV(IColor pixel)
             => typeof(IYUV<byte>).IsAssignableFrom(pixel.GetType()) || typeof(IYUV<ushort>).IsAssignableFrom(pixel.GetType()) || typeof(IYUV<uint>).IsAssignableFrom(pixel.GetType()) || typeof(IYUV<float>).IsAssignableFrom(pixel.GetType());
@@ -429,7 +423,7 @@ namespace PixelTest
 
         private ulong GetDataFromIColor(IColor pixel)
         {
-            int size = Marshal.SizeOf(pixel.GetType());
+            int size = Marshal.SizeOf(pixel);
             byte[] bytes = new byte[size];
 
             IntPtr ptr = Marshal.UnsafeAddrOfPinnedArrayElement(bytes, 0);

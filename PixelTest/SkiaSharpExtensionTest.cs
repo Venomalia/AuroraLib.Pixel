@@ -4,6 +4,7 @@ using AuroraLib.Pixel.PixelFormats;
 using AuroraLib.Pixel.SkiaSharpExtension;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkiaSharp;
+using RGBA32 = AuroraLib.Pixel.PixelFormats.RGBA<byte>;
 
 namespace PixelTest
 {
@@ -28,17 +29,17 @@ namespace PixelTest
         [DataRow(SKColorType.RgbaF16)]
         [DataRow(SKColorType.RgbaF16Clamped)]
         [DataRow(SKColorType.RgbaF32)]
-        //[DataRow(SKColorType.Rg88)] // not supported
+        //[DataRow(SKColorType.Rg88)]
         //[DataRow(SKColorType.AlphaF16)]
-        //[DataRow(SKColorType.RgF16)] // not supported
+        //[DataRow(SKColorType.RgF16)]
         //[DataRow(SKColorType.Alpha16)]
-        //[DataRow(SKColorType.Rg1616)] // not supported
+        //[DataRow(SKColorType.Rg1616)]
         [DataRow(SKColorType.Rgba16161616)]
         [DataRow(SKColorType.Bgra1010102)]
         [DataRow(SKColorType.Bgr101010x)]
         //[DataRow(SKColorType.Bgr101010xXR)] // not supported
         [DataRow(SKColorType.Srgba8888)]
-        //[DataRow(SKColorType.R8Unorm)] // not supported
+        //[DataRow(SKColorType.R8Unorm)]
         //[DataRow(SKColorType.Rgba10x6)] // not supported
         public void AsAuroraImage(SKColorType format)
         {
@@ -82,9 +83,9 @@ namespace PixelTest
             Assert.AreEqual(ToRGBA32(Blue), imageBitmap.GetPixel(9, 9).ToBGRA32());
         }
 
-        public BGRA32 ToRGBA32(RGBA32 rgba)
+        public BGRA<byte> ToRGBA32(RGBA32 rgba)
         {
-            BGRA32 bgra = default;
+            BGRA<byte> bgra = default;
             bgra.From8Bit(rgba);
             return bgra;
         }

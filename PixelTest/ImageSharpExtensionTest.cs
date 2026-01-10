@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
+using RGBA32 = AuroraLib.Pixel.PixelFormats.RGBA<byte>;
 namespace PixelTest
 {
     [TestClass]

@@ -2,10 +2,15 @@
 
 namespace AuroraLib.Pixel.PixelFormats
 {
+#if DEBUG
+#pragma warning disable CS1591
+    public static class Help
+#else
     internal static class Help
+#endif
     {
-        public static readonly float ByteMaxF = byte.MaxValue;
-        public static readonly float UshortMaxF = ushort.MaxValue;
+        public const float ByteMaxF = byte.MaxValue;
+        public const float UshortMaxF = ushort.MaxValue;
 
         public static byte Expand2BitTo8Bit(int value) => (byte)((value & 0b11) * 85);
         public static byte Expand3BitTo8Bit(int value) => (byte)(value << 5 | value << 2 | value >> 1);
@@ -26,11 +31,14 @@ namespace AuroraLib.Pixel.PixelFormats
         public static float BT709Luminance(in Vector4 color)
             => BT709Luminance(new Vector3(color.X, color.Y, color.Z));
 
-        public static byte BT709Luminance8Bit<TColor>(TColor color) where TColor : IRGB<byte>
-            => (byte)(BT709Luminance(new Vector3(color.R, color.G, color.B)) + 0.5f);
+        public static byte BT709Luminance(byte r, byte g, byte b)
+            => (byte)(BT709Luminance(new Vector3(r, g, b)) + 0.5f);
 
-        public static ushort BT709Luminance16Bit<TColor>(TColor color) where TColor : IRGB<ushort>
-            => (ushort)(BT709Luminance(new Vector3(color.R, color.G, color.B)) + 0.5f);
+        public static ushort BT709Luminance(ushort r, ushort g, ushort b)
+            => (ushort)(BT709Luminance(new Vector3(r, g, b)) + 0.5f);
 
     }
+#if DEBUG
+#pragma warning restore CS1591
+#endif
 }

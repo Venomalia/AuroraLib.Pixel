@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AuroraLib.Pixel.Processing;
+using System;
 using System.Numerics;
 
 namespace AuroraLib.Pixel

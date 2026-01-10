@@ -67,7 +67,7 @@ namespace AuroraLib.Pixel.BlockProcessor
             BinaryPrimitives.WriteUInt64LittleEndian(target, c0 | ((ulong)c1 << 8) | (indices << 16));
         }
 
-        internal static void GetInterpolatedColours(byte left, byte right, Span<byte> colors)
+        private static void GetInterpolatedColours(byte left, byte right, Span<byte> colors)
         {
             colors[0] = left;
             colors[1] = right;
@@ -92,7 +92,7 @@ namespace AuroraLib.Pixel.BlockProcessor
             }
         }
 
-        internal static (byte max, byte min) GetMinMax(ReadOnlySpan<TColor> source, int stride, byte threshold = 16)
+        private static (byte max, byte min) GetMinMax(ReadOnlySpan<TColor> source, int stride, byte threshold = 16)
         {
             byte min = byte.MaxValue, minThreshold = byte.MaxValue;
             byte max = byte.MinValue, maxThreshold = byte.MinValue;
@@ -116,7 +116,7 @@ namespace AuroraLib.Pixel.BlockProcessor
                 }
             }
 
-            if (threshold != 0 &&
+            if (threshold != byte.MinValue &&
                 min < 5 && max > 250 &&
                 minThreshold != byte.MaxValue &&
                 maxThreshold != byte.MinValue)
@@ -125,7 +125,7 @@ namespace AuroraLib.Pixel.BlockProcessor
             return (max, min);
         }
 
-        internal static int GetBestIndex(byte value, ReadOnlySpan<byte> palette)
+        private static int GetBestIndex(byte value, ReadOnlySpan<byte> palette)
         {
             int bestIndex = 0;
             int bestDist = int.MaxValue;

@@ -3,6 +3,7 @@ using AuroraLib.Pixel.PixelFormats;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Drawing;
+using RGBA32 = AuroraLib.Pixel.PixelFormats.RGBA<byte>;
 
 namespace PixelTest
 {

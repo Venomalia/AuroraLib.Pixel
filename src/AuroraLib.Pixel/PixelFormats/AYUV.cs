@@ -45,7 +45,7 @@ namespace AuroraLib.Pixel.PixelFormats
         /// <inheritdoc/>
         public void FromScaledVector4(Vector4 vector)
         {
-            vector *= byteMax;
+            vector *= Help.ByteMaxF;
             float r = vector.X;
             float g = vector.Y;
             float b = vector.Z;
@@ -53,16 +53,15 @@ namespace AuroraLib.Pixel.PixelFormats
             float u = 128 - (0.148f * r + 0.291f * g - 0.439f * b);
             float v = 128 + (0.439f * r - 0.368f * g - 0.071f * b);
 
-            Vector4 yuva = Vector4.Clamp(new Vector4(y, u, v, vector.W) + new Vector4(0.5f), Vector4.Zero, byteMax);
+            Vector4 yuva = Vector4.Clamp(new Vector4(y, u, v, vector.W) + new Vector4(0.5f), Vector4.Zero, new Vector4(Help.ByteMaxF));
             Y = (byte)yuva.X;
             U = (byte)yuva.Y;
             V = (byte)yuva.Z;
             A = (byte)yuva.W;
         }
-        private static readonly Vector4 byteMax = new Vector4(255);
 
         /// <inheritdoc/>
-        public Vector4 ToScaledVector4()
+        public readonly Vector4 ToScaledVector4()
         {
             // http://msdn.microsoft.com/en-us/library/windows/desktop/dd206750.aspx
             float C = (Y - 16f) * 1.1644f;

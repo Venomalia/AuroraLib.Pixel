@@ -8,7 +8,7 @@ namespace AuroraLib.Pixel.BlockProcessor
     /// Represents a BC5 signed (ATI2/3Dc) compressed texture block processor. stores two independent single-channel values.
     /// Each 4x4 block is 16 bytes in size, composed of two 8-byte BC4 blocks.
     /// </summary>
-    public sealed class BC5SBlock<TColor> : IBlockProcessor<TColor> where TColor : unmanaged, IColor<TColor>, IIntensity<byte>, IAlpha<byte>
+    public sealed class BC5SBlock<TColor> : IBlockProcessor<TColor> where TColor : unmanaged, IColor<TColor>, IIntensity<sbyte>, IAlpha<sbyte>
     {
         private const int BPB = 8 * 2;
 
@@ -22,20 +22,20 @@ namespace AuroraLib.Pixel.BlockProcessor
         public int BytesPerBlock => BPB;
 
         private readonly BC4SBlock<TColor> BC4 = new BC4SBlock<TColor>();
-        private readonly BC4SBlock<AToI<TColor>> BC4a = new BC4SBlock<AToI<TColor>>();
+        private readonly BC4SBlock<AToI<TColor, sbyte>> BC4a = new BC4SBlock<AToI<TColor, sbyte>>();
 
         /// <inheritdoc/>
         public void DecodeBlock(ReadOnlySpan<byte> source, Span<TColor> target, int stride)
         {
             BC4.DecodeBlock(source.Slice(8), target, stride);
-            Span<AToI<TColor>> intensity = MemoryMarshal.Cast<TColor, AToI<TColor>>(target);
+            Span<AToI<TColor, sbyte>> intensity = MemoryMarshal.Cast<TColor, AToI<TColor, sbyte>>(target);
             BC4a.DecodeBlock(source.Slice(0, 8), intensity, stride);
         }
 
         public void EncodeBlock(ReadOnlySpan<TColor> source, Span<byte> target, int stride)
         {
             BC4.EncodeBlock(source, target.Slice(8), stride);
-            ReadOnlySpan<AToI<TColor>> intensity = MemoryMarshal.Cast<TColor, AToI<TColor>>(source);
+            ReadOnlySpan<AToI<TColor, sbyte>> intensity = MemoryMarshal.Cast<TColor, AToI<TColor, sbyte>>(source);
             BC4a.EncodeBlock(intensity, target.Slice(0, 8), stride);
         }
     }
