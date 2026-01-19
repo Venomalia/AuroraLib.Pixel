@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace AuroraLib.Pixel.BitmapExtension
 {
-    internal sealed class BitmapMemoryManager<T> : MemoryManager<T> where T : struct
+    internal sealed class BitmapMemoryManager<T> : MemoryManager<T> where T : unmanaged
     {
         internal readonly BitmapData Data;
         private readonly Bitmap Bitmap;

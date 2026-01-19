@@ -18,7 +18,7 @@ namespace PixelTest
 
         [TestMethod]
         //[DataRow(PixelFormat.Format1bppIndexed)] // not supported
-        //[DataRow(PixelFormat.Format4bppIndexed)] // not supported
+        [DataRow(PixelFormat.Format4bppIndexed)]
         [DataRow(PixelFormat.Format8bppIndexed)]
         //[DataRow(PixelFormat.Format16bppGrayScale)] // Has no GetPixel...
         [DataRow(PixelFormat.Format16bppRgb555)]
@@ -34,7 +34,6 @@ namespace PixelTest
         public void AsAuroraImage(PixelFormat format)
         {
             using var imageBitmap = new Bitmap(12, 12, format);
-
             using (IImage imageAurora = imageBitmap.AsAuroraImage())
             {
                 imageAurora[0, 0] = Black.ToScaledVector4();

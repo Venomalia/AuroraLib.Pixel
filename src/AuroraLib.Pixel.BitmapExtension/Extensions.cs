@@ -1,4 +1,5 @@
-﻿using AuroraLib.Pixel.Image;
+﻿using AuroraLib.Pixel.Formats.Dolphin.BlockProcessor;
+using AuroraLib.Pixel.Image;
 using AuroraLib.Pixel.PixelFormats;
 using AuroraLib.Pixel.Processing;
 using System;
@@ -17,8 +18,8 @@ namespace AuroraLib.Pixel.BitmapExtension
         /// <returns>An Aurora Image representation of the bitmap, directly accessing its memory.</returns>
         public static IImage AsAuroraImage(this Bitmap bitmap) => bitmap.PixelFormat switch
         {
-            //PixelFormat.Format1bppIndexed => throw new NotImplementedException(),
-            //PixelFormat.Format4bppIndexed => throw new NotImplementedException(),
+            //PixelFormat.Format1bppIndexed => AsAuroraPaletteImage<I<byte>>(bitmap, 1),
+            PixelFormat.Format4bppIndexed => AsAuroraPaletteImage4bit(bitmap),
             PixelFormat.Format8bppIndexed => AsAuroraPaletteImage<I<byte>>(bitmap),
             PixelFormat.Format16bppGrayScale => AsAuroraImage<I<ushort>>(bitmap),
             PixelFormat.Format16bppRgb555 => AsAuroraImage<RGB555>(bitmap),
@@ -56,31 +57,38 @@ namespace AuroraLib.Pixel.BitmapExtension
             return new MemoryImage<TColor>(data, data.Data.Width, data.Data.Height, data.Data.Stride / Unsafe.SizeOf<TColor>());
         }
 
+        private static IPaletteImage<BGRA<byte>> AsAuroraPaletteImage4bit(Bitmap bitmap)
+        {
+            var data = new BitmapMemoryManager<byte>(bitmap);
+            var imageData = new BlockImage<I4>(new I4Block(),data, data.Data.Width, data.Data.Height);
+
+            ColorPalette bitmapPalette = bitmap.Palette; // clone of the palette!
+            data.DisposeAction = () => UpdateBitmapPalette(bitmap, bitmapPalette); // Update palette!
+            return AsAuroraPaletteImage(bitmap, imageData, bitmapPalette);
+        }
+
         private static PaletteImage<TColor, BGRA<byte>> AsAuroraPaletteImage<TColor>(Bitmap bitmap) where TColor : unmanaged, IColor<TColor>, IIndexColor
         {
             var data = new BitmapMemoryManager<TColor>(bitmap);
             var imageData = new MemoryImage<TColor>(data, data.Data.Width, data.Data.Height, data.Data.Stride / Unsafe.SizeOf<TColor>());
-            var bitmapPalette = bitmap.Palette.Entries.AsSpan();
 
-            var paletteImage = new PaletteImage<TColor, BGRA<byte>>(imageData, bitmapPalette.Length);
+            ColorPalette bitmapPalette = bitmap.Palette; // clone of the palette!
+            data.DisposeAction = () => UpdateBitmapPalette(bitmap, bitmapPalette); // Update palette!
+            return AsAuroraPaletteImage(bitmap, imageData, bitmapPalette);
+        }
+
+        private static PaletteImage<TColor, BGRA<byte>> AsAuroraPaletteImage<TColor>(Bitmap bitmap, IImage<TColor> imageData, ColorPalette bitmapPalette) where TColor : unmanaged, IColor<TColor>, IIndexColor
+        {
+            var rawbitmapPalette = bitmapPalette.Entries.AsSpan();
+            var paletteImage = new PaletteImage<TColor, BGRA<byte>>(imageData, rawbitmapPalette.Length);
             var auroraPalette = paletteImage.Palette;
-            for (int i = 0; i < bitmapPalette.Length; i++)
-                auroraPalette[i] = bitmapPalette[i];
+            for (int i = 0; i < rawbitmapPalette.Length; i++)
+                auroraPalette[i] = rawbitmapPalette[i];
 
-            data.DisposeAction = () => UpdateBitmapPalette(bitmap, paletteImage);
             return paletteImage;
         }
 
-        private static void UpdateBitmapPalette(Bitmap bitmap, IPaletteImage<BGRA<byte>> paletteImage)
-        {
-            var bitmapPalette = bitmap.Palette; // clone of the palette!
-
-            var rawbitmapPalette = bitmapPalette.Entries.AsSpan();
-            var auroraPalette = paletteImage.Palette;
-            for (int i = 0; i < rawbitmapPalette.Length; i++)
-                rawbitmapPalette[i] = auroraPalette[i];
-
-            bitmap.Palette = bitmapPalette;
-        }
+        private static void UpdateBitmapPalette(Bitmap bitmap, ColorPalette bitmapPalette)
+            => bitmap.Palette = bitmapPalette;
     }
 }

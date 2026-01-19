@@ -74,7 +74,7 @@ namespace AuroraLib.Pixel.Image
             => _disposable = memory;
 
         public BlockImage(IBlockProcessor<TColor> processor, int width, int height) : this(processor, MemoryPool<byte>.Shared.Rent(processor.CalculatedDataSize(width, height)), width, height)
-            => _blockMemory.Span.Clear();
+            => Clear();
 
         private void DecodeBlockLine(int index)
         {
@@ -240,6 +240,9 @@ namespace AuroraLib.Pixel.Image
         {
             if (!_blockMemory.IsEmpty)
             {
+                if (_isDirty)
+                    EncodeBlockLine();
+
                 _disposable?.Dispose();
                 _blockMemory = Memory<byte>.Empty;
                 Width = Height = 0;
