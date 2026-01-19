@@ -91,6 +91,9 @@ namespace AuroraLib.Pixel.PixelFormats
         public void From8Bit<TColor>(TColor value) where TColor : IRGB<byte>
             => PackedValue = PackRGBA(Help.Expand8BitTo16Bit(value.R), Help.Expand8BitTo16Bit(value.G), Help.Expand8BitTo16Bit(value.B), value.A);
 
+        /// <inheritdoc/>
+        public override readonly string ToString() => $"{nameof(BGRA1010102)}({B >> 6}, {G >> 6}, {R >> 6}, {A >> 8})";
+
         public static implicit operator uint(BGRA1010102 pixel) => pixel.PackedValue;
         public static implicit operator BGRA1010102(uint value) => Unsafe.As<uint, BGRA1010102>(ref value);
     }
