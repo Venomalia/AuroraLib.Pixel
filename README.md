@@ -20,7 +20,7 @@ Converts a Bitmap to an Aurora Image: Directly accesses the memory without copyi
 ```
 Converts an Aurora Image to a Bitmap.
  ``` csharp
-    using IImage<RGBA32> imageAurora = new MemoryImage<RGBA32>(10, 10);
+    using IImage<RGBA<byte>> imageAurora = new MemoryImage<RGBA<byte>>(10, 10);
     using Bitmap bitmap = imageAurora.CloneAsBitmap(PixelFormat.Format32bppArgb);
 ```
 
@@ -39,7 +39,7 @@ Try to converts a ImageSharp.Image to an Aurora Image: Directly accesses the mem
 ```
 Converts an Aurora Image to a ImageSharp.Image.
  ``` csharp
-    using IImage<RGBA32> imageAurora = new MemoryImage<RGBA32>(10, 10);
+    using IImage<RGBA<byte>> imageAurora = new MemoryImage<RGBA<byte>>(10, 10);
     using Image<Rgba32> imageSixLabors = imageAurora.CloneAsImageSharp<Rgba32>();
 ```
 
@@ -55,6 +55,6 @@ Converts a SKBitmap to an Aurora Image: Directly accesses the memory without cop
 ```
 Converts an Aurora Image to a SKBitmap.
  ``` csharp
-    using IImage<RGBA32> imageAurora = new MemoryImage<RGBA32>(10, 10);
+    using IImage<RGBA<byte>> imageAurora = new MemoryImage<RGBA<byte>>(10, 10);
     using SKBitmap bitmap = imageAurora.CloneAsSKBitmap(SKColorType.Bgra8888);
 ```
