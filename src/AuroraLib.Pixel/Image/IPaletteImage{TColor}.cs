@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using AuroraLib.Pixel.Processing.Processor;
+using System;
 
 namespace AuroraLib.Pixel.Image
 {
@@ -28,5 +28,12 @@ namespace AuroraLib.Pixel.Image
         /// <param name="oldIndex"></param>
         /// <param name="newIndex"></param>
         void ReplaceColor(int oldIndex, int newIndex);
+
+        /// <summary>
+        /// Applies a pixel processor to the index buffer of the image.
+        /// The processor operates on index values, not on the resolved palette colors.
+        /// </summary>
+        /// <param name="processor">The processor to apply to the image.</param>
+        void ApplyToIndices(IPixelProcessor processor);
     }
 }

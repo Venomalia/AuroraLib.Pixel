@@ -283,6 +283,13 @@ namespace AuroraLib.Pixel.Image
         public void Apply(IReadOnlyPixelProcessor processor) => processor.Apply(this);
 
         /// <inheritdoc/>
+        public void ApplyToIndices(IPixelProcessor processor)
+        {
+            processor.Apply(_image);
+            CalculateColorsUsed(_image, _palette_ref);
+        }
+
+        /// <inheritdoc/>
         public void Dispose()
             => _image?.Dispose();
 
