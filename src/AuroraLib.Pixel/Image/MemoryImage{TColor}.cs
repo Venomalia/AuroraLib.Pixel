@@ -97,7 +97,8 @@ namespace AuroraLib.Pixel.Image
         /// <param name="width">The width of the image, in pixels.</param>
         /// <param name="height">The height of the image, in pixels.</param>
         /// <param name="stride"> Optional stride (number of elements per row); if not specified or less than <paramref name="width"/>, defaults to <paramref name="width"/>.</param>
-        public MemoryImage(int width, int height, int stride = default)
+        /// <param name="clear">If true, all pixels in the image are initialized to default(TColor) (usually zero). If false, the image memory is left uninitialized for performance.</param>
+        public MemoryImage(int width, int height, int stride = default, bool clear = false)
         {
 #if NET8_0_OR_GREATER
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
@@ -115,6 +116,8 @@ namespace AuroraLib.Pixel.Image
             Width = width;
             Height = height;
             Stride = stride;
+            if (clear)
+                _pixelMemory.Span.Clear();
         }
 
         /// <inheritdoc/>

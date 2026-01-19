@@ -23,9 +23,10 @@ namespace AuroraLib.Pixel.Image
         void SetPixelIndex(int x, int y, int index);
 
         /// <summary>
-        /// Returns the internal pixel buffer.
+        /// Replaces all occurrences of one palette index with another.
         /// </summary>
-        /// <returns>An untyped <see cref="IImage"/> representing the raw pxel buffer of the image.</returns>
-        IImage GetBuffer();
+        /// <param name="oldIndex"></param>
+        /// <param name="newIndex"></param>
+        void ReplaceColor(int oldIndex, int newIndex);
     }
 }

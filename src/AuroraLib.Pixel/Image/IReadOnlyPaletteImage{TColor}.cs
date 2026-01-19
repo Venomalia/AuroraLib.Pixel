@@ -9,14 +9,15 @@ namespace AuroraLib.Pixel.Image
     public interface IReadOnlyPaletteImage<TColor> : IReadOnlyImage<TColor> where TColor : unmanaged, IColor<TColor>
     {
         /// <summary>
-        /// Gets the number of colors currently used in the palette.
-        /// </summary>
-        int ColorsUsed { get; }
-
-        /// <summary>
         /// Gets a read-only list of <typeparamref name="TColor"/> representing the palette.
         /// </summary>
         ReadOnlySpan<TColor> Palette { get; }
+
+        /// <summary>
+        /// Gets the reference count for each palette entry.
+        /// A value of 0 indicates that the corresponding palette index is not currently used by any pixel.
+        /// </summary>
+        ReadOnlySpan<int> PaletteRefCounts { get; }
 
         /// <summary>
         /// Retrieves the index of the color in the palette for the pixel at the specified position (x, y).
@@ -25,5 +26,11 @@ namespace AuroraLib.Pixel.Image
         /// <param name="y">The vertical coordinate of the pixel.</param>
         /// <returns>The index in the palette corresponding to the pixel at the specified coordinates.</returns>
         int GetPixelIndex(int x, int y);
+
+        /// <summary>
+        /// Returns the internal pixel buffer.
+        /// </summary>
+        /// <returns>An untyped <see cref="IReadOnlyImage"/> representing the raw pxel buffer of the image.</returns>
+        IReadOnlyImage GetBuffer();
     }
 }

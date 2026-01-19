@@ -35,7 +35,8 @@ namespace PixelTest
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => image[10, 10] = Black);
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => image[-1, -1] = Black);
 
-            Assert.AreEqual(5, image.ColorsUsed);
+            Assert.AreEqual(96, image.PaletteRefCounts[0]);
+            Assert.AreEqual(0, image.PaletteRefCounts[5]);
         }
 
         [TestMethod]
@@ -49,6 +50,9 @@ namespace PixelTest
 
             image[0, 0] = Yellow; // Will be removed from the Palette.
 
+            Assert.AreEqual(95, image.PaletteRefCounts[0]);
+            Assert.AreEqual(00, image.PaletteRefCounts[6]);
+
             image.Crop(new Rectangle(2, 2, 5, 5));
 
             Assert.AreEqual(Black, image[0, 0]);
@@ -57,7 +61,8 @@ namespace PixelTest
             Assert.AreEqual(Blue, image[4, 4]);
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => image[5, 5] = Black);
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => image[-1, -1] = Black);
-            Assert.AreEqual(5, image.ColorsUsed);
+            Assert.AreEqual(21, image.PaletteRefCounts[0]);
+            Assert.AreEqual(0, image.PaletteRefCounts[5]);
         }
 
         [TestMethod]
@@ -69,12 +74,17 @@ namespace PixelTest
             image[0, 9] = Green;
             image[9, 9] = Blue;
 
+            Assert.AreEqual(96, image.PaletteRefCounts[0]);
+            Assert.AreEqual(0, image.PaletteRefCounts[5]);
+
             image.Clear();
 
             Assert.AreEqual(default, image[0, 0]);
             Assert.AreEqual(default, image[9, 0]);
             Assert.AreEqual(default, image[0, 9]);
             Assert.AreEqual(default, image[9, 9]);
+            Assert.AreEqual(100, image.PaletteRefCounts[0]);
+            Assert.AreEqual(0, image.PaletteRefCounts[1]);
         }
 
         [TestMethod]
@@ -87,7 +97,6 @@ namespace PixelTest
             image[9, 9] = Blue;
 
             var clone = (IPaletteImage<RGBA32>)image.Clone();
-            image[1, 0] = Black;
 
             Assert.AreEqual(clone.Width, image.Width);
             Assert.AreEqual(clone.Height, image.Height);
@@ -95,8 +104,18 @@ namespace PixelTest
             Assert.AreEqual(clone[9, 0], image[9, 0]);
             Assert.AreEqual(clone[0, 9], image[0, 9]);
             Assert.AreEqual(clone[9, 9], image[9, 9]);
+            Assert.AreEqual(clone.PaletteRefCounts[0], image.PaletteRefCounts[0]);
+            Assert.AreEqual(clone.PaletteRefCounts[1], image.PaletteRefCounts[1]);
+            Assert.AreEqual(clone.PaletteRefCounts[2], image.PaletteRefCounts[2]);
+            Assert.AreEqual(clone.PaletteRefCounts[3], image.PaletteRefCounts[3]);
+            Assert.AreEqual(clone.PaletteRefCounts[4], image.PaletteRefCounts[4]);
+            image[1, 0] = Black;
             Assert.AreNotEqual(clone[1, 0], image[1, 0]);
-            Assert.AreEqual(clone.ColorsUsed, image.ColorsUsed);
+            Assert.AreNotEqual(clone.PaletteRefCounts[0], image.PaletteRefCounts[0]);
+            Assert.AreNotEqual(clone.PaletteRefCounts[1], image.PaletteRefCounts[1]);
+            Assert.AreEqual(clone.PaletteRefCounts[2], image.PaletteRefCounts[2]);
+            Assert.AreEqual(clone.PaletteRefCounts[3], image.PaletteRefCounts[3]);
+            Assert.AreEqual(clone.PaletteRefCounts[4], image.PaletteRefCounts[4]);
         }
 
         [TestMethod]
@@ -123,9 +142,6 @@ namespace PixelTest
             Assert.AreEqual(darkGray, image[9, 0]);
             Assert.AreEqual(Green, image[0, 9]);
             Assert.AreEqual(Blue, image[9, 9]);
-
-            // Verify number of colors used in palette (including transparent)
-            Assert.AreEqual(4, image.ColorsUsed);
         }
     }
 }

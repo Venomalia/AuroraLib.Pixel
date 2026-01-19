@@ -2,8 +2,10 @@
 using AuroraLib.Pixel.PixelProcessor;
 using AuroraLib.Pixel.PixelProcessor.Helper;
 using AuroraLib.Pixel.Processing.Processor;
+using AuroraLib.Pixel.Processing.Quantizer;
 using System;
-using System.Buffers;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Numerics;
 
@@ -20,65 +22,45 @@ namespace AuroraLib.Pixel.Image
         where TColor : unmanaged, IColor<TColor>
     {
         private readonly IImage<TIndex> _image;
-
         private readonly TColor[] _palette;
+        private readonly int[] _palette_ref;
 
         /// <inheritdoc/>
         public int Width => _image.Width;
         /// <inheritdoc/>
         public int Height => _image.Height;
-        /// <inheritdoc/>
-        public int ColorsUsed { get; private set; }
 
         /// <inheritdoc/>
         public Span<TColor> Palette => _palette.AsSpan();
 
+        ReadOnlySpan<TColor> IReadOnlyPaletteImage<TColor>.Palette => Palette;
+
+        /// <inheritdoc/>
+        public ReadOnlySpan<int> PaletteRefCounts => _palette_ref.AsSpan();
+
         /// <inheritdoc/>
         public ImageMetadata? Metadata { get; set; }
 
-        ReadOnlySpan<TColor> IReadOnlyPaletteImage<TColor>.Palette => Palette;
+        /// <summary>
+        /// Gets or sets the color quantizer used by this image. 
+        /// The quantizer determines how new colors are added to the palette.
+        /// </summary>
+        public IColorQuantizer<TColor> Quantizer { get; set; } = new MergePaletteQuantizer<TColor>();
 
         /// <summary>
         /// Initializes a new <see cref="PaletteImage{TIndex, TColor}"/> using an indexed image and a palette.
         /// </summary>
         /// <param name="image">The indexed image containing palette indices of type <typeparamref name="TIndex"/>.</param>
         /// <param name="palette">The color palette. Each index in the image maps to a color in this span.</param>
-        /// <param name="requestedPaletteSize">The desired number of palette entries. Limited by the bit depth of <typeparamref name="TIndex"/>.</param>
-        public PaletteImage(IImage<TIndex> image, ReadOnlySpan<TColor> palette, int requestedPaletteSize = 2048) : this(image, CalculateHighestUsedPallet(image), palette, Math.Max(palette.Length, requestedPaletteSize))
-        { }
-
-        /// <summary>
-        /// Initializes a new <see cref="PaletteImage{TIndex, TColor}"/> using an indexed image, a palette, and the number of distinct colors used.
-        /// </summary>
-        /// <param name="image">The indexed image containing palette indices of type <typeparamref name="TIndex"/>.</param>
-        /// <param name="colorsUsed">The number of distinct palette indices used in the image.</param>
-        /// <param name="palette">The color palette. Each index in the image maps to a color in this span.</param>
-        /// <param name="requestedPaletteSize">The desired number of palette entries. Limited by the bit depth of <typeparamref name="TIndex"/>.</param>
-        public PaletteImage(IImage<TIndex> image, int colorsUsed, ReadOnlySpan<TColor> palette, int requestedPaletteSize = 2048) : this(image, colorsUsed, Math.Max(palette.Length, requestedPaletteSize))
-            => palette.CopyTo(_palette);
+        public PaletteImage(IImage<TIndex> image, ReadOnlySpan<TColor> palette) : this(image, palette.Length)
+        => palette.CopyTo(_palette);
 
         /// <summary>
         /// Initializes a new <see cref="PaletteImage{TIndex, TColor}"/> using an indexed image and a requested palette size.
         /// </summary>
         /// <param name="image">The indexed image containing palette indices of type <typeparamref name="TIndex"/>.</param>
-        /// <param name="colorsUsed">The number of distinct palette indices used in the image.</param>
         /// <param name="requestedPaletteSize">The desired number of palette entries. Limited by the bit depth of <typeparamref name="TIndex"/>.</param>
-        public PaletteImage(IImage<TIndex> image, int colorsUsed, int requestedPaletteSize)
-        {
-#if NET8_0_OR_GREATER
-            ArgumentNullException.ThrowIfNull(image);
-#else
-            if (image is null) throw new ArgumentNullException(nameof(image));
-#endif
-            int maxPalletSize = 1 << default(TIndex).FormatInfo.BitsPerPixel;
-
-            _image = image;
-            _palette = new TColor[Math.Min(Math.Max(requestedPaletteSize, colorsUsed), maxPalletSize)];
-            ColorsUsed = colorsUsed;
-        }
-
-        /// <inheritdoc cref="PaletteImage{TIndex, TColor}.PaletteImage(IImage{TIndex}, int, int)"/>
-        public PaletteImage(IImage<TIndex> image, int requestedPaletteSize = 2048) : this(image, CalculateHighestUsedPallet(image), requestedPaletteSize)
+        public PaletteImage(IImage<TIndex> image, int requestedPaletteSize = 2048) : this(image, requestedPaletteSize, false)
         { }
 
         /// <summary>
@@ -89,30 +71,30 @@ namespace AuroraLib.Pixel.Image
         /// <param name="stride">The number of pixels per image row.</param>
         /// <param name="requestedPaletteSize">The desired number of palette entries. The actual size is limited by the bit depth of <typeparamref name="TIndex"/>.
         public PaletteImage(int width, int height, int stride = default, int requestedPaletteSize = 4095)
-            : this(new MemoryImage<TIndex>(width, height, stride), 1, requestedPaletteSize)
+            : this(new MemoryImage<TIndex>(width, height, stride, true), requestedPaletteSize, true)
         { }
 
-        private static int CalculateHighestUsedPallet(IReadOnlyImage<TIndex> image)
+        internal PaletteImage(IImage<TIndex> image, ReadOnlySpan<TColor> palette, ReadOnlySpan<int> colorsUsed) : this(image, palette.Length, true)
         {
-            int highestUsedPallet = 0;
-            int maxPallet = (1 << default(TIndex).FormatInfo.BitsPerPixel);
-            var rowAccessor = new ReadOnlyRowAccessor<TIndex>(image, 0, image.Width);
+            palette.CopyTo(_palette);
+            colorsUsed.CopyTo(_palette_ref);
+        }
 
-            for (int y = 0; y < image.Height; y++)
-            {
-                ReadOnlySpan<TIndex> row = rowAccessor[y];
-                for (int x = 0; x < image.Width; x++)
-                {
-                    if (row[x].I > highestUsedPallet)
-                    {
-                        highestUsedPallet = row[x].I;
-                        if (highestUsedPallet + 1 == maxPallet)
-                            return maxPallet;
-                    }
-                }
-            }
-
-            return highestUsedPallet + 1;
+        internal PaletteImage(IImage<TIndex> image, int requestedPaletteSize, bool IsEmpty)
+        {
+#if NET8_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(image);
+#else
+            if (image is null) throw new ArgumentNullException(nameof(image));
+#endif
+            int maxPalletSize = 1 << default(TIndex).FormatInfo.BitsPerPixel;
+            _image = image;
+            _palette = new TColor[Math.Min(requestedPaletteSize, maxPalletSize)];
+            _palette_ref = new int[_palette.Length];
+            if (IsEmpty)
+                _palette_ref[0] = _image.Height * _image.Width;
+            else
+                CalculateColorsUsed(image, _palette_ref);
         }
 
         /// <inheritdoc/>
@@ -125,8 +107,9 @@ namespace AuroraLib.Pixel.Image
             }
             set
             {
-                int index = GetColorIndexOrAdd(value);
-                SetPixelIndex(x, y, index);
+                TIndex v = default;
+                v.I = GetOrAddColorIndex(value, GetPixelIndex(x, y));
+                _image[x, y] = v;
             }
         }
 
@@ -136,6 +119,9 @@ namespace AuroraLib.Pixel.Image
         /// <inheritdoc/>
         public void SetPixelIndex(int x, int y, int index)
         {
+            _palette_ref[index]++;
+            _palette_ref[_image[x, y].I]--;
+
             TIndex value = default;
             value.I = index;
             _image[x, y] = value;
@@ -181,71 +167,114 @@ namespace AuroraLib.Pixel.Image
 
             int toCopy = Math.Min(pixelRow.Length, Width - x);
 
-            if (_image is IDirectRowAccess<TIndex> imageRowAccess)
-            {
-                Span<TIndex> row = imageRowAccess.GetWritableRow(y);
-                for (int i = 0; i < toCopy; i++)
-                {
-                    row[x + i].I = GetColorIndexOrAdd(pixelRow[i]);
-                }
-            }
-            else
-            {
-                Span<TIndex> pixel = toCopy <= 512 ? stackalloc TIndex[toCopy] : new TIndex[toCopy];
-                for (int i = 0; i < toCopy; i++)
-                {
-                    pixel[i].I = GetColorIndexOrAdd(pixelRow[i]);
-                }
-                _image.SetPixel(x, y, pixel);
-            }
+            var rowAccessor = new RowAccessor<TIndex>(_image, x, toCopy);
+            Span<TIndex> row = rowAccessor[y];
+            GetOrAddColorIndices(pixelRow.Slice(0, toCopy), row);
+
+            if (rowAccessor.IsBuffered)
+                rowAccessor[y] = row;
         }
 
-
-        private int GetColorIndexOrAdd(TColor color)
+        private int GetOrAddColorIndex(TColor newColor, int oldIndex)
         {
-            int index = _palette.AsSpan(0, ColorsUsed).IndexOf(color);
+            var palett = _palette.AsSpan();
+            _palette_ref[oldIndex]--;
 
             // If the color is not in the palette
+            int index = palett.IndexOf(newColor);
             if (index < 0)
             {
-                index = ColorsUsed;
+                // Check if there is a free slot available
+                index = _palette_ref.AsSpan().IndexOf(0);
 
-                // If the palette is full, find the two most similar colors, blend them, and update the palette
-                if (index >= _palette.Length)
-                    return MergeMostSimilarColor(color);
-
-                // Add the new color to the palette
-                _palette[index] = color;
-                ColorsUsed++;
+                // If the palette is full, ask the quantizer which palette color will be replaced/merged.
+                if (index < 0)
+                    index = Quantizer.ResolveColor(this, newColor);
+                else
+                    // Add the new color to the palette
+                    palett[index] = newColor;
             }
-
+            _palette_ref[index]++;
             return index;
         }
 
+        private void GetOrAddColorIndices(ReadOnlySpan<TColor> newColors, Span<TIndex> indices)
+        {
+            var palett = _palette.AsSpan();
+
+            for (int i = 0; i < indices.Length; i++)
+            {
+                _palette_ref[indices[i].I]--;
+            }
+
+            var colorCounts = new Dictionary<TColor, int>(newColors.Length);
+            for (int i = 0; i < newColors.Length; i++)
+            {
+                var color = newColors[i];
+                colorCounts.TryGetValue(color, out int count);
+                colorCounts[color] = count + 1;
+            }
+
+            foreach (var kv in colorCounts)
+            {
+                TColor color = kv.Key;
+                int count = kv.Value;
+
+                // If the color is not in the palette
+                int index = palett.IndexOf(color);
+                if (index < 0)
+                {
+                    // Check if there is a free slot available
+                    index = _palette_ref.AsSpan().IndexOf(0);
+                    if (index < 0)
+                    {
+                        // If the palette is full, ask the quantizer which palette color will be replaced/merged.
+                        index = Quantizer.ResolveColor(this, color, count);
+                    }
+                    else
+                    {
+                        // Add the new color to the palette
+                        palett[index] = color;
+                    }
+                }
+
+                _palette_ref[index] += count;
+
+                // Replaced count with index
+                colorCounts[color] = index;
+            }
+
+            for (int i = 0; i < indices.Length; i++)
+            {
+                indices[i].I = colorCounts[newColors[i]];
+            }
+        }
+
         /// <inheritdoc/>
-        public IImage GetBuffer() => _image;
+        public IReadOnlyImage GetBuffer() => _image;
 
         /// <inheritdoc/>
         public void Clear()
         {
             _image.Clear();
-            Palette[0] = default;
-            ColorsUsed = default(TIndex).I + 1;
+            _palette.AsSpan().Clear();
+            _palette_ref.AsSpan().Clear();
+            _palette_ref[0] = _image.Height * _image.Width;
         }
 
         /// <inheritdoc/>
         public void Crop(Rectangle region)
         {
             _image.Crop(region);
-            ColorsUsed = CalculateHighestUsedPallet(_image);
+            CalculateColorsUsed(_image, _palette_ref);
         }
 
         /// <inheritdoc/>
-        public IImage<TColor> Clone() => new PaletteImage<TIndex, TColor>(_image.Clone(), ColorsUsed, Palette);
+        public IImage<TColor> Clone() => new PaletteImage<TIndex, TColor>(_image.Clone(), _palette, _palette_ref);
 
         IImage IReadOnlyImage.Clone() => Clone();
 
-        IImage<TColor> IReadOnlyImage<TColor>.Create(int width, int height) => new PaletteImage<TIndex, TColor>(_image.Create(width, height), Palette);
+        IImage<TColor> IReadOnlyImage<TColor>.Create(int width, int height) => new PaletteImage<TIndex, TColor>(_image.Create(width, height), _palette.Length, true);
 
         /// <inheritdoc/>
         public void Apply(IPixelProcessor processor) => processor.Apply(this);
@@ -270,76 +299,50 @@ namespace AuroraLib.Pixel.Image
         Vector4 IReadOnlyImage.this[int x, int y] => this[x, y].ToScaledVector4();
         TColor IReadOnlyImage<TColor>.this[int x, int y] => this[x, y];
 
-        private int MergeMostSimilarColor(TColor newColor)
+        /// <inheritdoc/>
+        public void ReplaceColor(int oldIndex, int newIndex)
         {
-            Span<TColor> palette = Palette;
-            // Convert palette colors to Vector4
-            using IMemoryOwner<Vector4> memoryBuffer = MemoryPool<Vector4>.Shared.Rent(palette.Length + 1);
-            Span<Vector4> buffer = memoryBuffer.Memory.Span.Slice(0, palette.Length + 1);
-            for (int i = 0; i < palette.Length; i++)
-            {
-                buffer[i] = palette[i].ToScaledVector4();
-            }
-            buffer[palette.Length] = newColor.ToScaledVector4();
+            var rowAccessor = new RowAccessor<TIndex>(_image, 0, _image.Width);
+            int remaining = _palette_ref[oldIndex]; ;
 
-
-            // Find the two most similar colors in the palette
-            (int color1, int color2) = FindMostSimilarColors(buffer);
-            palette[color1].FromScaledVector4(Vector4.Lerp(buffer[color1], buffer[color2], 0.5f));
-
-            // If the second color isn't the new one, replace it in the image
-            if (color2 != palette.Length)
-            {
-                Replace(_image, color2, color1);
-                palette[color2] = newColor;
-                return color2;
-            }
-            return color1;
-        }
-
-        private static void Replace(IImage<TIndex> image, int oldIndex, int newIndex)
-        {
-            var rowAccessor = new RowAccessor<TIndex>(image, 0, image.Width);
-
-            for (int y = 0; y < image.Height; y++)
+            for (int y = 0; y < _image.Height; y++)
             {
                 Span<TIndex> row = rowAccessor[y];
-                for (int x = 0; x < image.Width; x++)
+                for (int x = 0; x < _image.Width; x++)
                 {
                     if (row[x].I == oldIndex)
                     {
                         row[x].I = newIndex;
+                        remaining--;
                     }
                 }
                 if (rowAccessor.IsBuffered)
                     rowAccessor[y] = row;
-            }
-        }
 
-        private static (int color1, int color2) FindMostSimilarColors(ReadOnlySpan<Vector4> palette)
-        {
-            float minDistance = float.MaxValue;
-            int color1 = default, color2 = default;
-
-            for (int i = 0; i < palette.Length; i++)
-            {
-                for (int j = i + 1; j < palette.Length; j++)
+                if (remaining == 0)
                 {
-                    float distance = CalculateColorDistance(palette[i], palette[j]);
-                    if (distance < minDistance)
-                    {
-                        minDistance = distance;
-                        color1 = i;
-                        color2 = j;
-                    }
+                    _palette_ref[newIndex] += _palette_ref[oldIndex];
+                    _palette_ref[oldIndex] = 0;
+                    return;
                 }
             }
+            // If we land here, something is wrong.
+            Debug.Fail("ReplaceIndex finished but oldIndex is still in use.");
+            CalculateColorsUsed(_image, _palette_ref);
+        }
 
-            return (color1, color2);
-            static float CalculateColorDistance(Vector4 color1, Vector4 color2)
+        private static void CalculateColorsUsed(IReadOnlyImage<TIndex> image, Span<int> colorsUsed)
+        {
+            colorsUsed.Clear();
+            var rowAccessor = new ReadOnlyRowAccessor<TIndex>(image, 0, image.Width);
+
+            for (int y = 0; y < image.Height; y++)
             {
-                Vector4 Difference = Vector4.Abs(color1 - color2);
-                return Difference.Length() * (1f + Difference.W);
+                ReadOnlySpan<TIndex> row = rowAccessor[y];
+                for (int x = 0; x < image.Width; x++)
+                {
+                    colorsUsed[row[x].I]++;
+                }
             }
         }
     }
