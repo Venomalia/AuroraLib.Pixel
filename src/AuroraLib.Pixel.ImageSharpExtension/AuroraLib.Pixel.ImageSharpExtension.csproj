@@ -2,11 +2,11 @@
 
   <PropertyGroup>
 	  <AssemblyTitle>AuroraLib.Pixel.ImageSharpExtension</AssemblyTitle>
-	  <TargetFrameworks>net8.0;net6.0;netstandard2.0;net472;</TargetFrameworks>
+	  <TargetFrameworks>net10.0;net8.0;net6.0;netstandard2.0;net472;</TargetFrameworks>
 	  <ImplicitUsings>disable</ImplicitUsings>
 	  <Nullable>enable</Nullable>
 	  <Title>AuroraLib.Pixel.ImageSharpExtension</Title>
-	  <Version>1.4.0</Version>
+	  <Version>1.4.1</Version>
 	  <AssemblyVersion>$(Version)</AssemblyVersion>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
 	  <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
@@ -22,7 +22,7 @@
 	
 	<PropertyGroup>
 		<NETFrameworks>|netstandard2.0|net481|net48|net472|NET471|NET47|NET462|NET461|</NETFrameworks>
-		<NET>|net8.0|net7.0|net6.0|net5.0|</NET>
+		<NET>|net10.0|net8.0|net7.0|net6.0|net5.0|</NET>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="$(NETFrameworks.Contains('|$(TargetFramework)|'))">

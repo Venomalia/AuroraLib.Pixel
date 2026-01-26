@@ -1,8 +1,7 @@
-﻿using AuroraLib.Pixel.BlockProcessor;
-using AuroraLib.Pixel.PixelFormats;
+﻿using AuroraLib.Pixel.PixelFormats;
 using System;
 
-namespace AuroraLib.Pixel.Formats.Dolphin.BlockProcessor
+namespace AuroraLib.Pixel.BlockProcessor
 {
     /// <summary>
     /// Block processor for 4-bit indexed pixel data (I4).

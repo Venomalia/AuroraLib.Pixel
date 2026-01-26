@@ -1,4 +1,4 @@
-﻿using AuroraLib.Pixel.Formats.Dolphin.BlockProcessor;
+﻿using AuroraLib.Pixel.BlockProcessor;
 using AuroraLib.Pixel.Image;
 using AuroraLib.Pixel.PixelFormats;
 using AuroraLib.Pixel.Processing;
@@ -60,7 +60,7 @@ namespace AuroraLib.Pixel.BitmapExtension
         private static IPaletteImage<BGRA<byte>> AsAuroraPaletteImage4bit(Bitmap bitmap)
         {
             var data = new BitmapMemoryManager<byte>(bitmap);
-            var imageData = new BlockImage<I4>(new I4Block(),data, data.Data.Width, data.Data.Height);
+            var imageData = new BlockImage<I4>(new I4Block(), data, data.Data.Width, data.Data.Height);
 
             ColorPalette bitmapPalette = bitmap.Palette; // clone of the palette!
             data.DisposeAction = () => UpdateBitmapPalette(bitmap, bitmapPalette); // Update palette!
