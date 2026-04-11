@@ -17,7 +17,7 @@
 	  <PackageIcon>icon.png</PackageIcon>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	  <Configurations>Debug;Release;Optimized</Configurations>
+	  <Configurations>Debug;Release</Configurations>
 	  <Description>Extension for AuroraLib.Pixel, provides integration for System.Drawing.Bitmap.</Description>
   </PropertyGroup>
 
@@ -53,11 +53,7 @@
 	  </None>
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(Configuration)' == 'Release'">
-		<PackageReference Include="AuroraLib.Pixel" Version="1.4.0" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(Configuration)' != 'Release'">
-		<ProjectReference Include="..\AuroraLib.Pixel\AuroraLib.Pixel.csproj" />
+	<ItemGroup>
+	  <ProjectReference Include="..\AuroraLib.Pixel\AuroraLib.Pixel.csproj" />
 	</ItemGroup>
 </Project>

@@ -16,7 +16,7 @@
 		<PackageProjectUrl>https://github.com/Venomalia/AuroraLib.Pixel</PackageProjectUrl>
 		<PackageIcon>icon.png</PackageIcon>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<Configurations>Debug;Release;Optimized</Configurations>
+		<Configurations>Debug;Release</Configurations>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<Description>Extension for AuroraLib.Pixel, provides integration for SkiaSharp.</Description>
 	</PropertyGroup>
@@ -41,16 +41,12 @@
 		</None>
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(Configuration)' == 'Release'">
-		<PackageReference Include="AuroraLib.Pixel" Version="1.4.0" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(Configuration)' != 'Release'">
-		<ProjectReference Include="..\AuroraLib.Pixel\AuroraLib.Pixel.csproj" />
+	<ItemGroup>
+	  <PackageReference Include="SkiaSharp" Version="3.119.1" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="SkiaSharp" Version="3.119.1" />
+	  <ProjectReference Include="..\AuroraLib.Pixel\AuroraLib.Pixel.csproj" />
 	</ItemGroup>
 
 </Project>

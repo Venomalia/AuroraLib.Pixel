@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.11.35312.102
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11626.88 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuroraLib.Pixel", "src\AuroraLib.Pixel\AuroraLib.Pixel.csproj", "{D5191F78-32F8-4265-A4C6-A1F5CCE870E1}"
 EndProject
@@ -16,38 +16,27 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
-		Optimized|Any CPU = Optimized|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{D5191F78-32F8-4265-A4C6-A1F5CCE870E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D5191F78-32F8-4265-A4C6-A1F5CCE870E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D5191F78-32F8-4265-A4C6-A1F5CCE870E1}.Optimized|Any CPU.ActiveCfg = Release|Any CPU
-		{D5191F78-32F8-4265-A4C6-A1F5CCE870E1}.Optimized|Any CPU.Build.0 = Release|Any CPU
 		{D5191F78-32F8-4265-A4C6-A1F5CCE870E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D5191F78-32F8-4265-A4C6-A1F5CCE870E1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0E57B67E-7E4D-4B41-888F-D44192B6FB6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0E57B67E-7E4D-4B41-888F-D44192B6FB6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0E57B67E-7E4D-4B41-888F-D44192B6FB6A}.Optimized|Any CPU.ActiveCfg = Optimized|Any CPU
-		{0E57B67E-7E4D-4B41-888F-D44192B6FB6A}.Optimized|Any CPU.Build.0 = Optimized|Any CPU
 		{0E57B67E-7E4D-4B41-888F-D44192B6FB6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0E57B67E-7E4D-4B41-888F-D44192B6FB6A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4CD06069-BE42-442A-B39F-FF5A797FDC9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4CD06069-BE42-442A-B39F-FF5A797FDC9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4CD06069-BE42-442A-B39F-FF5A797FDC9D}.Optimized|Any CPU.ActiveCfg = Optimized|Any CPU
-		{4CD06069-BE42-442A-B39F-FF5A797FDC9D}.Optimized|Any CPU.Build.0 = Optimized|Any CPU
 		{4CD06069-BE42-442A-B39F-FF5A797FDC9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4CD06069-BE42-442A-B39F-FF5A797FDC9D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{90FFFD2F-6DCA-43F2-94EC-7D34647B3446}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{90FFFD2F-6DCA-43F2-94EC-7D34647B3446}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{90FFFD2F-6DCA-43F2-94EC-7D34647B3446}.Optimized|Any CPU.ActiveCfg = Optimized|Any CPU
-		{90FFFD2F-6DCA-43F2-94EC-7D34647B3446}.Optimized|Any CPU.Build.0 = Optimized|Any CPU
 		{90FFFD2F-6DCA-43F2-94EC-7D34647B3446}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90FFFD2F-6DCA-43F2-94EC-7D34647B3446}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D07EDF6B-9CFE-45F8-A7AE-1B3257CF22CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D07EDF6B-9CFE-45F8-A7AE-1B3257CF22CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D07EDF6B-9CFE-45F8-A7AE-1B3257CF22CF}.Optimized|Any CPU.ActiveCfg = Debug|Any CPU
-		{D07EDF6B-9CFE-45F8-A7AE-1B3257CF22CF}.Optimized|Any CPU.Build.0 = Debug|Any CPU
 		{D07EDF6B-9CFE-45F8-A7AE-1B3257CF22CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D07EDF6B-9CFE-45F8-A7AE-1B3257CF22CF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
