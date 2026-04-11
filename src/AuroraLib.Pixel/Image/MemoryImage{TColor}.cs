@@ -110,8 +110,9 @@ namespace AuroraLib.Pixel.Image
             if (stride < width)
                 stride = NextPowerOfTwo(width);
 
-            var pool = MemoryPool<TColor>.Shared.Rent(stride * height);
-            _pixelMemory = pool.Memory;
+            int pixel = stride * height;
+            var pool = MemoryPool<TColor>.Shared.Rent(pixel);
+            _pixelMemory = pool.Memory.Slice(0, pixel);
             _disposable = pool;
             Width = width;
             Height = height;
