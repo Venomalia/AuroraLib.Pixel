@@ -65,6 +65,16 @@ namespace AuroraLib.Pixel.Metadata
         }
 
         /// <summary>
+        /// Sampling parameters describing how the texture should be filtered,
+        /// wrapped, and sampled during rendering.
+        /// </summary>
+        public SamplingInfos? SamplingInfos
+        {
+            get => TryGet<SamplingInfos>(nameof(SamplingInfos));
+            set => Set(nameof(SamplingInfos), value);
+        }
+
+        /// <summary>
         /// XMP metadata (XML format).
         /// </summary>
         public byte[]? Xmp
