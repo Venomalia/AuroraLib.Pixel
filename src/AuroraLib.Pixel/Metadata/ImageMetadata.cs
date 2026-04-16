@@ -39,6 +39,15 @@ namespace AuroraLib.Pixel.Metadata
         }
 
         /// <summary>
+        /// Defines the RGB color space of the image using CIE XY chromaticity coordinates.
+        /// </summary>
+        public ColorSpace? ColorSpace
+        {
+            get => TryGet<ColorSpace>(nameof(ColorSpace));
+            set => Set(nameof(ColorSpace), value);
+        }
+
+        /// <summary>
         /// Stores arbitrary textual metadata associated with the image.
         /// </summary>
         public Dictionary<string, string> Text
