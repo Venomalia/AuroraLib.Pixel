@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Xml.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Numerics;
 
 namespace AuroraLib.Pixel.Metadata
 {
@@ -57,10 +58,37 @@ namespace AuroraLib.Pixel.Metadata
         /// <summary>
         /// XMP metadata (XML format).
         /// </summary>
-        public XDocument? XmpProfile
+        public byte[]? Xmp
         {
-            get => TryGet<XDocument>(nameof(XmpProfile));
-            set => Set(nameof(XmpProfile), value);
+            get => TryGet<byte[]>(nameof(Xmp));
+            set => Set(nameof(Xmp), value);
+        }
+
+        /// <summary>
+        /// Icc metadata (Icc format).
+        /// </summary>
+        public byte[]? Icc
+        {
+            get => TryGet<byte[]>(nameof(Icc));
+            set => Set(nameof(Icc), value);
+        }
+
+        /// <summary>
+        /// Exif metadata (Exif format).
+        /// </summary>
+        public byte[]? Exif
+        {
+            get => TryGet<byte[]>(nameof(Exif));
+            set => Set(nameof(Exif), value);
+        }
+
+        /// <summary>
+        /// Iptc metadata (Iptc format).
+        /// </summary>
+        public byte[]? Iptc
+        {
+            get => TryGet<byte[]>(nameof(Iptc));
+            set => Set(nameof(Iptc), value);
         }
 
         /// <summary>
@@ -92,5 +120,4 @@ namespace AuroraLib.Pixel.Metadata
                 Profiles[key] = value;
         }
     }
-
 }
