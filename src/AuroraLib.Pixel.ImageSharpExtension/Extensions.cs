@@ -7,6 +7,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
+using System.Numerics;
 
 namespace AuroraLib.Pixel.ImageSharpExtension
 {
@@ -86,9 +87,24 @@ namespace AuroraLib.Pixel.ImageSharpExtension
                 {
                     memoryImage = new MemoryImage<TColor>(memory.Cast<TPixel, TColor>(), image.Width, image.Height, image.Width);
                     memoryImage.Metadata = new ImageMetadata();
+
                     memoryImage.Metadata.Profiles.Add("SixLabors", image.Metadata);
+
+                    Vector2 resolution = new Vector2((float)image.Metadata.HorizontalResolution, (float)image.Metadata.VerticalResolution);
+                    memoryImage.Metadata.PixelsPerInch = image.Metadata.ResolutionUnits switch
+                    {
+                        SixLabors.ImageSharp.Metadata.PixelResolutionUnit.PixelsPerCentimeter => resolution * 2.54f,
+                        SixLabors.ImageSharp.Metadata.PixelResolutionUnit.PixelsPerMeter => resolution * 0.0254f,
+                        _ => resolution,
+                    };
+                    if (image.Metadata.IccProfile != null)
+                        memoryImage.Metadata.Icc = image.Metadata.IccProfile.ToByteArray();
+
+                    if (image.Metadata.ExifProfile != null)
+                        memoryImage.Metadata.Exif = image.Metadata.ExifProfile.ToByteArray();
+
                     if (image.Metadata.XmpProfile != null)
-                        memoryImage.Metadata.XmpProfile = image.Metadata.XmpProfile.GetDocument();
+                        memoryImage.Metadata.Xmp = image.Metadata.XmpProfile.ToByteArray();
                     return true;
                 }
                 memoryImage = null;
@@ -111,6 +127,21 @@ namespace AuroraLib.Pixel.ImageSharpExtension
             else
                 source.Apply(new CopyToImageSharpProcessor<TPixel>(clone)); // use Vector4
 
+            if (source.Metadata != null)
+            {
+                clone.Metadata.ResolutionUnits = SixLabors.ImageSharp.Metadata.PixelResolutionUnit.PixelsPerInch;
+                clone.Metadata.HorizontalResolution = source.Metadata.PixelsPerInch.X;
+                clone.Metadata.VerticalResolution = source.Metadata.PixelsPerInch.Y;
+
+                if (source.Metadata.Icc != null)
+                    clone.Metadata.IccProfile = new SixLabors.ImageSharp.Metadata.Profiles.Icc.IccProfile(source.Metadata.Icc);
+
+                if (source.Metadata.Exif != null)
+                    clone.Metadata.ExifProfile = new SixLabors.ImageSharp.Metadata.Profiles.Exif.ExifProfile(source.Metadata.Exif);
+
+                if (source.Metadata.Xmp != null)
+                    clone.Metadata.XmpProfile = new SixLabors.ImageSharp.Metadata.Profiles.Xmp.XmpProfile(source.Metadata.Xmp);
+            }
             return clone;
         }
     }
