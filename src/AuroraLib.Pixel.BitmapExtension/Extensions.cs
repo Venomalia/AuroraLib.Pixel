@@ -1,10 +1,12 @@
 ﻿using AuroraLib.Pixel.BlockProcessor;
 using AuroraLib.Pixel.Image;
+using AuroraLib.Pixel.Metadata;
 using AuroraLib.Pixel.PixelFormats;
 using AuroraLib.Pixel.Processing;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace AuroraLib.Pixel.BitmapExtension
@@ -48,13 +50,21 @@ namespace AuroraLib.Pixel.BitmapExtension
             {
                 image.CopyFrom(source);
             }
+            if (source.Metadata != null)
+            {
+                var dpi = source.Metadata.PixelsPerInch;
+                clone.SetResolution(dpi.X, dpi.Y);
+            }
             return clone;
         }
 
         private static MemoryImage<TColor> AsAuroraImage<TColor>(Bitmap bitmap) where TColor : unmanaged, IColor<TColor>
         {
             var data = new BitmapMemoryManager<TColor>(bitmap);
-            return new MemoryImage<TColor>(data, data.Data.Width, data.Data.Height, data.Data.Stride / Unsafe.SizeOf<TColor>());
+
+            var meta = new ImageMetadata();
+            meta.PixelsPerInch = new Vector2(bitmap.HorizontalResolution, bitmap.VerticalResolution);
+            return new MemoryImage<TColor>(data, data.Data.Width, data.Data.Height, data.Data.Stride / Unsafe.SizeOf<TColor>()) { Metadata = meta };
         }
 
         private static IPaletteImage<BGRA<byte>> AsAuroraPaletteImage4bit(Bitmap bitmap)
@@ -84,6 +94,10 @@ namespace AuroraLib.Pixel.BitmapExtension
             var auroraPalette = paletteImage.Palette;
             for (int i = 0; i < rawbitmapPalette.Length; i++)
                 auroraPalette[i] = rawbitmapPalette[i];
+
+            var meta = new ImageMetadata();
+            meta.PixelsPerInch = new Vector2(bitmap.HorizontalResolution, bitmap.VerticalResolution);
+            paletteImage.Metadata = meta;
 
             return paletteImage;
         }
