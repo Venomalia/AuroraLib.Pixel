@@ -80,18 +80,26 @@ namespace AuroraLib.Pixel.Image
             colorsUsed.CopyTo(_palette_ref);
         }
 
-        internal PaletteImage(IImage<TIndex> image, int requestedPaletteSize, bool IsEmpty)
+        internal PaletteImage(IImage<TIndex> image, int requestedPaletteSize, bool IsEmpty) : this(image, new TColor[Math.Min(requestedPaletteSize, 1 << default(TIndex).FormatInfo.BitsPerPixel)], IsEmpty)
+        {
+        }
+
+        internal PaletteImage(IImage<TIndex> image, TColor[] palette, bool IsEmpty)
         {
 #if NET8_0_OR_GREATER
             ArgumentNullException.ThrowIfNull(image);
+            ArgumentNullException.ThrowIfNull(palette);
 #else
             if (image is null) throw new ArgumentNullException(nameof(image));
+            if (palette is null) throw new ArgumentNullException(nameof(palette));
 #endif
-            int maxPalletSize = 1 << default(TIndex).FormatInfo.BitsPerPixel;
+            if (palette.Length == 0) throw new ArgumentException();
+
             _image = image;
-            _palette = new TColor[Math.Min(requestedPaletteSize, maxPalletSize)];
+            _palette = palette;
             _palette_ref = new int[_palette.Length];
-            if (IsEmpty)
+
+            if (IsEmpty || _palette.Length == 1)
                 _palette_ref[0] = _image.Height * _image.Width;
             else
                 CalculateColorsUsed(image, _palette_ref);
