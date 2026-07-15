@@ -13,22 +13,14 @@ namespace AuroraLib.Pixel.Processing
     public static class ImageExtensions
     {
         /// <summary>
-        /// Determines if the specified rectangle is entirely within the bounds of the image.
+        /// Gets the bounding rectangle of the image.
         /// </summary>
-        /// <param name="image">The image to check against.</param>
-        /// <param name="rectangle">The rectangle to check.</param>
-        /// <returns>True if the rectangle is fully contained within the image; otherwise, false.</returns>
-        public static bool Contains(this IReadOnlyImage image, Rectangle rectangle)
-            => rectangle.X >= 0 && rectangle.Y >= 0 && rectangle.Right <= image.Width && rectangle.Bottom <= image.Height;
-
-        /// <summary>
-        /// Determines if the specified point is within the bounds of the image.
-        /// </summary>
-        /// <param name="image">The image to check against.</param>
-        /// <param name="point">The point to check.</param>
-        /// <returns>True if the point is within the image; otherwise, false.</returns>
-        public static bool Contains(this IReadOnlyImage image, Point point)
-            => point.X >= 0 && point.X < image.Width && point.Y >= 0 && point.Y < image.Height;
+        /// <param name="image">The image.</param>
+        /// <returns>
+        /// A rectangle starting at (0, 0) with the width and height of the image.
+        /// </returns>
+        public static Rectangle GetBounds(this IReadOnlyImage image)
+            => new Rectangle(0, 0, image.Width, image.Height);
 
         /// <summary>
         /// Clones the <paramref name="source"/> <see cref="IReadOnlyImage"/> and converts it to a new <see cref="IImage"/> of type <typeparamref name="TColor"/>.
@@ -75,16 +67,26 @@ namespace AuroraLib.Pixel.Processing
             where TColorT : unmanaged, IColor<TColorT>
             where TColorS : unmanaged, IColor<TColorS>
         {
-            if (srcRegion.Width == 0 || srcRegion.Height == 0)
+            if (srcRegion.Width == 0 || srcRegion.Height == 0 || target.Width == 0 || target.Height == 0)
                 return;
 
             EnsureValidDimensions(ref srcRegion);
 
-            if (!source.Contains(srcRegion))
+
+            if (!source.GetBounds().Contains(srcRegion))
                 throw new ArgumentOutOfRangeException(nameof(source), "Region exceeds source image bounds.");
 
-            if (!source.Contains(new Rectangle(targetCoordinate, srcRegion.Size)))
-                throw new ArgumentOutOfRangeException(nameof(target), "Region exceeds target image bounds.");
+            Rectangle targetRegion = new Rectangle(targetCoordinate, srcRegion.Size);
+            Rectangle clippedTarget = Rectangle.Intersect(targetRegion, target.GetBounds());
+
+            if (clippedTarget.IsEmpty)
+                return;
+
+            if (clippedTarget != targetRegion)
+            {
+                srcRegion = new Rectangle(srcRegion.X + clippedTarget.X - targetRegion.X, srcRegion.Y + clippedTarget.Y - targetRegion.Y, clippedTarget.Width, clippedTarget.Height);
+                targetCoordinate = clippedTarget.Location;
+            }
 
             RowAccessor<TColorT> targetPixel = new RowAccessor<TColorT>(target, targetCoordinate.X, srcRegion.Width);
             ReadOnlyRowAccessor<TColorS> sourcePixel = new ReadOnlyRowAccessor<TColorS>(source, srcRegion.X, srcRegion.Width);
@@ -107,13 +109,22 @@ namespace AuroraLib.Pixel.Processing
         }
 
         /// <inheritdoc cref="CopyFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Point, BlendModes.BlendFunction?, float)"/>
+        public static void CopyFrom<TColorT, TColorS>(this IImage<TColorT> target, IReadOnlyImage<TColorS> source, Point targetCoordinate, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+            where TColorT : unmanaged, IColor<TColorT> where TColorS : unmanaged, IColor<TColorS>
+            => target.CopyFrom(source, source.GetBounds(), targetCoordinate, blendMode, intensity);
+
+        /// <inheritdoc cref="CopyFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Point, BlendModes.BlendFunction?, float)"/>
         public static void CopyFrom<TColorT, TColorS>(this IImage<TColorT> target, IReadOnlyImage<TColorS> source, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
             where TColorT : unmanaged, IColor<TColorT> where TColorS : unmanaged, IColor<TColorS>
-            => target.CopyFrom(source, new Rectangle(0, 0, source.Width, source.Height), default, blendMode, intensity);
+            => target.CopyFrom(source, source.GetBounds(), default, blendMode, intensity);
 
         /// <inheritdoc cref="CopyFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Point, BlendModes.BlendFunction?, float)"/>
         public static void CopyFrom(this IImage target, IReadOnlyImage source, Rectangle srcRegion, Point targetCoordinate, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
             => target.Apply(new CopyRegionProcessor(source, srcRegion, targetCoordinate, blendMode, intensity));
+
+        /// <inheritdoc cref="CopyFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Point, BlendModes.BlendFunction?, float)"/>
+        public static void CopyFrom(this IImage target, IReadOnlyImage source, Point targetCoordinate, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+            => target.Apply(new CopyRegionProcessor(source, source.GetBounds(), targetCoordinate, blendMode, intensity));
 
         /// <inheritdoc cref="CopyFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Point, BlendModes.BlendFunction?, float)"/>
         public static void CopyFrom(this IImage target, IReadOnlyImage source, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
@@ -133,7 +144,7 @@ namespace AuroraLib.Pixel.Processing
 
             EnsureValidDimensions(ref region);
 
-            if (!image.Contains(region))
+            if (!image.GetBounds().Contains(region))
                 throw new ArgumentOutOfRangeException(nameof(region), "Region exceeds image bounds.");
 
             RowAccessor<TColor> topRow = new RowAccessor<TColor>(image, region.X, region.Width);
