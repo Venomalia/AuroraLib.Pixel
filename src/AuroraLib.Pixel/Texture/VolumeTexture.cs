@@ -1,6 +1,8 @@
 ﻿using AuroraLib.Pixel.Image;
+using AuroraLib.Pixel.Processing;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 
 namespace AuroraLib.Pixel.Texture
@@ -28,9 +30,7 @@ namespace AuroraLib.Pixel.Texture
         public override IImage<TColor> GetLevel(int index) => Depths[index];
 
         /// <inheritdoc/>
-        public override IImage<TColor> Clone() => new FlatTexture<TColor>(Depths.Select(l => l.Clone()));
-
-        /// <inheritdoc/>
-        public override IImage<TColor> Create(int width, int height) => new FlatTexture<TColor>(Depths[0].Create(width, height));
+        public override IImage<TColor1> CloneAs<TColor1>(Rectangle region)
+            => new FlatTexture<TColor1>(Depths.Select(l => l.CloneAs<TColor1>(region)));
     }
 }

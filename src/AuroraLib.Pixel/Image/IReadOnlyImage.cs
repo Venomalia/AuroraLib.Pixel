@@ -1,6 +1,7 @@
 ﻿using AuroraLib.Pixel.Metadata;
 using AuroraLib.Pixel.Processing.Processor;
 using System;
+using System.Drawing;
 using System.Numerics;
 
 namespace AuroraLib.Pixel.Image
@@ -46,5 +47,12 @@ namespace AuroraLib.Pixel.Image
         /// <returns>A new <see cref="IImage"/> that is a clone of the current image.</returns>
         IImage Clone();
 
+        /// <summary>
+        /// Creates a copy of the specified image region using the specified target color format.
+        /// </summary>
+        /// <typeparam name="TColor">The color type of the cloned image.</typeparam>
+        /// <param name="region">The region of the image to clone.</param>
+        /// <returns>A new <see cref="IImage"/> containing the copied region in the specified color format.</returns>
+        IImage<TColor> CloneAs<TColor>(Rectangle region) where TColor : unmanaged, IColor<TColor>;
     }
 }

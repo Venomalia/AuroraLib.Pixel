@@ -1,5 +1,6 @@
 ﻿using AuroraLib.Pixel.Image;
 using AuroraLib.Pixel.Metadata;
+using AuroraLib.Pixel.Processing;
 using AuroraLib.Pixel.Processing.Processor;
 using System;
 using System.Collections;
@@ -74,14 +75,14 @@ namespace AuroraLib.Pixel.Texture
             => BaseLevel.Apply(processor);
 
         void IReadOnlyImage<TColor>.GetPixel(int x, int y, Span<TColor> pixelRow) => BaseLevel.GetPixel(x, y, pixelRow);
+
         void IImage<TColor>.SetPixel(int x, int y, ReadOnlySpan<TColor> pixelRow) => BaseLevel.SetPixel(x, y, pixelRow);
-        IImage IReadOnlyImage.Clone() => Clone();
 
         /// <inheritdoc/>
-        public abstract IImage<TColor> Clone();
+        public IImage Clone() => this.CloneAs<TColor>();
 
         /// <inheritdoc/>
-        public abstract IImage<TColor> Create(int width, int height);
+        public abstract IImage<TColor1> CloneAs<TColor1>(Rectangle region) where TColor1 : unmanaged, IColor<TColor1>;
 
         /// <inheritdoc/>
         public void Crop(Rectangle region)
@@ -106,6 +107,7 @@ namespace AuroraLib.Pixel.Texture
                 level.Crop(new Rectangle(x, y, w, h));
             }
         }
+
         /// <inheritdoc/>
         public virtual void Clear()
         {
@@ -127,5 +129,6 @@ namespace AuroraLib.Pixel.Texture
         }
 
         IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<IImage<TColor>>)this).GetEnumerator();
+
     }
 }

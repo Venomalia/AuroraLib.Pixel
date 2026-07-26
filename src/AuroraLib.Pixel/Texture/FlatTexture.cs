@@ -1,5 +1,8 @@
 ﻿using AuroraLib.Pixel.Image;
+using AuroraLib.Pixel.Processing;
+using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 
 namespace AuroraLib.Pixel.Texture
@@ -27,12 +30,6 @@ namespace AuroraLib.Pixel.Texture
         public override IImage<TColor> GetLevel(int index) => Levels[index];
 
         /// <inheritdoc/>
-        public override IImage<TColor> Clone() => new FlatTexture<TColor>(Levels.Select(l => l.Clone()));
-
-        /// <inheritdoc/>
-        public override IImage<TColor> Create(int width, int height) => new FlatTexture<TColor>(Levels[0].Create(width, height));
-
-        /// <inheritdoc/>
         public override void Clear()
         {
             Levels[0].Clear();
@@ -41,6 +38,21 @@ namespace AuroraLib.Pixel.Texture
                 Levels[i].Dispose();
             }
             Levels.RemoveRange(1, Levels.Count - 1);
+        }
+
+        /// <inheritdoc/>
+        public override IImage<TColor1> CloneAs<TColor1>(Rectangle region)
+            => new FlatTexture<TColor1>(Levels.Select((level, index) =>level.CloneAs<TColor1>(ScaleMipRegion(region, index))));
+
+        private static Rectangle ScaleMipRegion(Rectangle region, int level)
+        {
+            int x = region.X >> level;
+            int y = region.Y >> level;
+
+            int width = Math.Max(1, region.Width >> level);
+            int height = Math.Max(1, region.Height >> level);
+
+            return new Rectangle(x, y, width, height);
         }
     }
 }

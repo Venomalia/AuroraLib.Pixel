@@ -29,28 +29,7 @@ namespace AuroraLib.Pixel.Processing
         /// <param name="source">The source image to clone.</param>
         /// <returns>A new <see cref="IImage{TColor}"/> that is a clone of the source image.</returns>
         public static IImage<TColor> CloneAs<TColor>(this IReadOnlyImage source) where TColor : unmanaged, IColor<TColor>
-        {
-            if (source is IReadOnlyImage<TColor> sourceOfT)
-                return sourceOfT.Clone();
-
-            MemoryImage<TColor> clone = new MemoryImage<TColor>(source.Width, source.Height);
-            clone.CopyFrom(source);
-            return clone;
-        }
-
-        /// <summary>
-        /// Clones a specific region of the <paramref name="source"/> <see cref="IReadOnlyImage"/> and converts it to a new <see cref="IImage"/> of type <typeparamref name="TColor"/>.
-        /// </summary>
-        /// <typeparam name="TColor">The color type to which the image region is cloned.</typeparam>
-        /// <param name="source">The source image to clone from.</param>
-        /// <param name="region">The region of the source image to clone.</param>
-        /// <returns>A new <see cref="IImage{TColor}"/> that is a clone of the specified region of the source image.</returns>
-        public static IImage<TColor> CloneAs<TColor>(this IReadOnlyImage source, Rectangle region) where TColor : unmanaged, IColor<TColor>
-        {
-            MemoryImage<TColor> clone = new MemoryImage<TColor>(region.Width, region.Height);
-            clone.CopyFrom(source, region, default);
-            return clone;
-        }
+            => source.CloneAs<TColor>(source.GetBounds());
 
         /// <summary>
         /// Copies a region from a <paramref name="source"/> image to a <paramref name="target"/> image, with an optional <paramref name="blendMode"/> and <paramref name="intensity"/> for blending.

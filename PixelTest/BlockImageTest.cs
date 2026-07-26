@@ -83,7 +83,7 @@ namespace PixelTest
             image[0, 9] = Green;
             image[9, 9] = Blue;
 
-            var clone = image.Clone();
+            var clone = (BlockImage<RGBA32>)image.Clone();
             image[1, 0] = Black;
 
             Assert.AreEqual(clone.Width, image.Width);

@@ -1,4 +1,5 @@
 ﻿using AuroraLib.Pixel.Metadata;
+using AuroraLib.Pixel.Processing;
 using AuroraLib.Pixel.Processing.Processor;
 using System;
 using System.Buffers;
@@ -136,16 +137,16 @@ namespace AuroraLib.Pixel.Image
         }
 
         /// <inheritdoc/>
-        public IImage<TColor> Clone()
+        public IImage Clone() => this.CloneAs<TColor>();
+
+        /// <inheritdoc/>
+        public IImage<TColor1> CloneAs<TColor1>(Rectangle region) where TColor1 : unmanaged, IColor<TColor1>
         {
-            MemoryImage<TColor> clone = new MemoryImage<TColor>(Width, Height, Stride);
-            Pixel.CopyTo(clone.Pixel);
+            int stride = region == this.GetBounds() ? Stride : default;
+            MemoryImage<TColor1> clone = new MemoryImage<TColor1>(region.Width, region.Height, stride);
+            clone.CopyFrom(this, region, default);
             return clone;
         }
-
-        IImage IReadOnlyImage.Clone() => Clone();
-
-        IImage<TColor> IReadOnlyImage<TColor>.Create(int width, int height) => new MemoryImage<TColor>(width, height);
 
         /// <inheritdoc/>
         public void Apply(IPixelProcessor processor) => processor.Apply(this);

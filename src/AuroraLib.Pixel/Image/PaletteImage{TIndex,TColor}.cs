@@ -1,6 +1,7 @@
 ﻿using AuroraLib.Pixel.Metadata;
 using AuroraLib.Pixel.PixelProcessor;
 using AuroraLib.Pixel.PixelProcessor.Helper;
+using AuroraLib.Pixel.Processing;
 using AuroraLib.Pixel.Processing.Processor;
 using AuroraLib.Pixel.Processing.Quantizer;
 using System;
@@ -74,17 +75,11 @@ namespace AuroraLib.Pixel.Image
             : this(new MemoryImage<TIndex>(width, height, stride, true), requestedPaletteSize, true)
         { }
 
-        internal PaletteImage(IImage<TIndex> image, ReadOnlySpan<TColor> palette, ReadOnlySpan<int> colorsUsed) : this(image, palette.Length, true)
-        {
-            palette.CopyTo(_palette);
-            colorsUsed.CopyTo(_palette_ref);
-        }
-
         internal PaletteImage(IImage<TIndex> image, int requestedPaletteSize, bool IsEmpty) : this(image, new TColor[Math.Min(requestedPaletteSize, 1 << default(TIndex).FormatInfo.BitsPerPixel)], IsEmpty)
         {
         }
 
-        internal PaletteImage(IImage<TIndex> image, TColor[] palette, bool IsEmpty)
+        private PaletteImage(IImage<TIndex> image, TColor[] palette, bool IsEmpty)
         {
 #if NET8_0_OR_GREATER
             ArgumentNullException.ThrowIfNull(image);
@@ -278,11 +273,15 @@ namespace AuroraLib.Pixel.Image
         }
 
         /// <inheritdoc/>
-        public IImage<TColor> Clone() => new PaletteImage<TIndex, TColor>(_image.Clone(), _palette, _palette_ref);
+        public IImage Clone() => this.CloneAs<TColor>();
 
-        IImage IReadOnlyImage.Clone() => Clone();
-
-        IImage<TColor> IReadOnlyImage<TColor>.Create(int width, int height) => new PaletteImage<TIndex, TColor>(_image.Create(width, height), _palette.Length, true);
+        /// <inheritdoc/>
+        public IImage<TColor1> CloneAs<TColor1>(Rectangle region) where TColor1 : unmanaged, IColor<TColor1>
+        {
+            PaletteImage<TIndex, TColor1> clone = new PaletteImage<TIndex, TColor1>(_image.CloneAs<TIndex>(region), _palette.Length);
+            Palette.To(clone.Palette);
+            return clone;
+        }
 
         /// <inheritdoc/>
         public void Apply(IPixelProcessor processor) => processor.Apply(this);

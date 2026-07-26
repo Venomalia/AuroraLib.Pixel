@@ -1,5 +1,6 @@
 ﻿using AuroraLib.Pixel.Image;
 using System;
+using System.Drawing;
 
 namespace AuroraLib.Pixel.Texture
 {
@@ -94,11 +95,8 @@ namespace AuroraLib.Pixel.Texture
         };
 
         /// <inheritdoc/>
-        public override IImage<TColor> Clone()
-            => new Cubemap<TColor>((FlatTexture<TColor>)PositiveX.Clone(), (FlatTexture<TColor>)NegativeX.Clone(), (FlatTexture<TColor>)PositiveY.Clone(), (FlatTexture<TColor>)NegativeY.Clone(), (FlatTexture<TColor>)PositiveZ.Clone(), (FlatTexture<TColor>)NegativeZ.Clone());
+        public override IImage<TColor1> CloneAs<TColor1>(Rectangle region)
+            => new Cubemap<TColor1>((FlatTexture<TColor1>)PositiveX.CloneAs<TColor1>(region), (FlatTexture<TColor1>)NegativeX.CloneAs<TColor1>(region), (FlatTexture<TColor1>)PositiveY.CloneAs<TColor1>(region), (FlatTexture<TColor1>)NegativeY.CloneAs<TColor1>(region), (FlatTexture<TColor1>)PositiveZ.CloneAs<TColor1>(region), (FlatTexture<TColor1>)NegativeZ.CloneAs<TColor1>(region));
 
-        /// <inheritdoc/>
-        public override IImage<TColor> Create(int width, int height)
-            => new Cubemap<TColor>((FlatTexture<TColor>)NegativeX.Create(width, height));
     }
 }

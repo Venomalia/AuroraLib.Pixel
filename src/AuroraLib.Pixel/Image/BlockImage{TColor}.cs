@@ -173,19 +173,26 @@ namespace AuroraLib.Pixel.Image
         }
 
         /// <inheritdoc/>
-        public IImage<TColor> Clone()
+        public IImage Clone() => CloneAs<TColor>(this.GetBounds());
+
+        /// <inheritdoc/>
+        public IImage<TColor1> CloneAs<TColor1>(Rectangle region) where TColor1 : unmanaged, IColor<TColor1>
         {
             if (_isDirty)
                 EncodeBlockLine();
 
-            BlockImage<TColor> clone = new BlockImage<TColor>(_block, Width, Height);
-            Raw.CopyTo(clone.Raw);
+            IImage<TColor1> clone;
+            if (_block is IBlockProcessor<TColor1> processor)
+            {
+                clone = new BlockImage<TColor1>(processor, region.Width, region.Height);
+            }
+            else
+            {
+                clone = new MemoryImage<TColor1>(region.Width, region.Height);
+            }
+            clone.CopyFrom(this, region, default);
             return clone;
         }
-
-        IImage IReadOnlyImage.Clone() => Clone();
-
-        IImage<TColor> IReadOnlyImage<TColor>.Create(int width, int height) => new BlockImage<TColor>(_block, width, height);
 
         /// <inheritdoc/>
         public Span<TColor> GetWritableRow(int y)
@@ -292,5 +299,6 @@ namespace AuroraLib.Pixel.Image
             if ((uint)y >= Height)
                 MemoryImage<TColor>.ThrowOutOfBoundsOfImage(y, Height, nameof(y), nameof(Height));
         }
+
     }
 }

@@ -27,15 +27,5 @@ namespace AuroraLib.Pixel.Image
         /// <param name="pixelRow">A span that will be filled with pixel values from the specified row.</param>
         void GetPixel(int x, int y, Span<TColor> pixelRow);
 
-        /// <inheritdoc cref="IReadOnlyImage.Clone()"/>
-        new IImage<TColor> Clone();
-
-        /// <summary>
-        /// Creates a new image instance with the specified dimensions.
-        /// </summary>
-        /// <param name="width">The width of the image in pixels.</param>
-        /// <param name="height">The height of the image in pixels.</param>
-        /// <returns>A new instance of <see cref="IImage{TColor}"/> with the given size.</returns>
-        IImage<TColor> Create(int width, int height);
     }
 }
