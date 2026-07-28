@@ -48,6 +48,8 @@ namespace AuroraLib.Pixel.Image
         /// </summary>
         public IColorQuantizer<TColor> Quantizer { get; set; } = new MergePaletteQuantizer<TColor>();
 
+        PixelFormatInfo IReadOnlyImage.PixelFormat => default(TColor).FormatInfo;
+
         /// <summary>
         /// Initializes a new <see cref="PaletteImage{TIndex, TColor}"/> using an indexed image and a palette.
         /// </summary>

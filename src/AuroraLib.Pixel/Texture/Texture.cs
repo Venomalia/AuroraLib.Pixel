@@ -47,6 +47,8 @@ namespace AuroraLib.Pixel.Texture
         /// <inheritdoc/>
         public ImageMetadata? Metadata { get => BaseLevel.Metadata; set => BaseLevel.Metadata = value; }
 
+        PixelFormatInfo IReadOnlyImage.PixelFormat => default(TColor).FormatInfo;
+
         /// <inheritdoc/>
         public TColor this[int x, int y]
         {

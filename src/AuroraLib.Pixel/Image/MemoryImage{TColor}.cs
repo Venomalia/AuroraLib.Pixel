@@ -39,6 +39,8 @@ namespace AuroraLib.Pixel.Image
         /// </summary>
         public Span<TColor> Pixel => _pixelMemory.Span;
 
+        PixelFormatInfo IReadOnlyImage.PixelFormat => default(TColor).FormatInfo;
+
         /// <inheritdoc/>
         public TColor this[int x, int y]
         {

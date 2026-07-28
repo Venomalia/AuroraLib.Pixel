@@ -25,6 +25,7 @@ namespace AuroraLib.Pixel.Image
         private readonly TColor[] _buffer;
         private int _currentBlockLine;
         private bool _isDirty;
+        PixelFormatInfo IReadOnlyImage.PixelFormat => default(TColor).FormatInfo;
 
         /// <inheritdoc/>
         public int Width { get; private set; }

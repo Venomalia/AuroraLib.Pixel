@@ -27,6 +27,11 @@ namespace AuroraLib.Pixel.Image
         ImageMetadata? Metadata { get; set; }
 
         /// <summary>
+        /// Gets the pixel format metadata for this color.
+        /// </summary>
+        PixelFormatInfo PixelFormat { get; }
+
+        /// <summary>
         /// Gets the pixel color at the specified coordinates as a scaled <see cref="Vector4"/>.
         /// Each component (X = R, Y = G, Z = B, W = A) is in the range [0, 1].
         /// </summary>
