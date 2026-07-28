@@ -1,6 +1,5 @@
 ﻿using AuroraLib.Pixel.BlockProcessor;
 using AuroraLib.Pixel.Image;
-using AuroraLib.Pixel.PixelFormats;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Drawing;
