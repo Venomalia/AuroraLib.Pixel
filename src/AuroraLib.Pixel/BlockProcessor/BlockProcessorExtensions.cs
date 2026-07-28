@@ -46,6 +46,27 @@ namespace AuroraLib.Pixel.BlockProcessor
             => CalculateBlockCount(format, width, height) * format.BytesPerBlock;
 
         /// <summary>
+        /// Calculates the total data size of all mip levels.
+        /// </summary>
+        /// <param name="format">The block format.</param>
+        /// <param name="width">The width of the area.</param>
+        /// <param name="height">The height of the area.</param>
+        /// <param name="mipMapCount">The number of additional mip levels. A value of 0 calculates only the base level.</param>
+        public static int CalculatedDataSize(this IBlockFormat format, int width, int height, int mipMapCount)
+        {
+            int size = 0;
+            for (int i = 0; i <= mipMapCount; i++)
+            {
+                if (width == 0 || height == 0)
+                    throw new ArgumentOutOfRangeException(nameof(mipMapCount), "Mip map count exceeds the texture dimensions.");
+
+                size += format.CalculatedDataSize(width, height);
+                width >>= 1;
+                height >>= 1;
+            }
+            return size;
+        }
+        /// <summary>
         /// Decodes an image from a byte <paramref name="source"/> into an image object.
         /// </summary>
         /// <typeparam name="TColor">The color type of the image pixels.</typeparam>
