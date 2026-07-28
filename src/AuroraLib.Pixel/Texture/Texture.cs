@@ -14,7 +14,7 @@ namespace AuroraLib.Pixel.Texture
     /// Represents a multi-level texture containing one or more image levels, such as mipmaps, animation frames, or layers.
     /// </summary>
     /// <typeparam name="TColor">The pixel color type.</typeparam>
-    public abstract class Texture<TColor> : IImage<TColor>, IEnumerable<IImage<TColor>> where TColor : unmanaged, IColor<TColor>
+    public abstract class Texture<TColor> : IImage<TColor>, IEnumerable<IImage<TColor>>, IEnumerable<IImage> where TColor : unmanaged, IColor<TColor>
     {
         /// <summary>
         /// Gets the total number of levels in this texture, including the base level.
@@ -124,7 +124,8 @@ namespace AuroraLib.Pixel.Texture
                 level.Dispose();
         }
 
-        IEnumerator<IImage<TColor>> IEnumerable<IImage<TColor>>.GetEnumerator()
+        /// <inheritdoc/>
+        public IEnumerator<IImage<TColor>> GetEnumerator()
         {
             for (int i = 0; i < LevelCount; i++)
                 yield return GetLevel(i);
@@ -132,5 +133,10 @@ namespace AuroraLib.Pixel.Texture
 
         IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<IImage<TColor>>)this).GetEnumerator();
 
+        IEnumerator<IImage> IEnumerable<IImage>.GetEnumerator()
+        {
+            foreach (var level in this)
+                yield return level;
+        }
     }
 }
