@@ -38,7 +38,7 @@ namespace AuroraLib.Pixel.Processing.Processor
             if (image is IPaletteImage<TColor> paletteImage)
             {
                 // We mirror the values directly in the index image.
-                ((IImage)paletteImage.GetBuffer()).Apply(this);
+                paletteImage.ApplyToIndices(this);
                 return;
             }
 
