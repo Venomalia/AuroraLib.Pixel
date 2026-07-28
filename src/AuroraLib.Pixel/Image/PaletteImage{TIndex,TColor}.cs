@@ -77,9 +77,17 @@ namespace AuroraLib.Pixel.Image
             : this(new MemoryImage<TIndex>(width, height, stride, true), requestedPaletteSize, true)
         { }
 
+        /// <summary>
+        /// Initializes a new <see cref="PaletteImage{TIndex, TColor}"/> using an existing palette.
+        /// The palette array is used directly without copying.
+        /// </summary>
+        /// <param name="image">The indexed image containing palette indices.</param>
+        /// <param name="palette">The palette entries used to resolve the indices.</param>
+        public PaletteImage(IImage<TIndex> image, TColor[] palette) : this(image, palette, false)
+        { }
+
         internal PaletteImage(IImage<TIndex> image, int requestedPaletteSize, bool IsEmpty) : this(image, new TColor[Math.Min(requestedPaletteSize, 1 << default(TIndex).FormatInfo.BitsPerPixel)], IsEmpty)
-        {
-        }
+        { }
 
         private PaletteImage(IImage<TIndex> image, TColor[] palette, bool IsEmpty)
         {
@@ -90,7 +98,7 @@ namespace AuroraLib.Pixel.Image
             if (image is null) throw new ArgumentNullException(nameof(image));
             if (palette is null) throw new ArgumentNullException(nameof(palette));
 #endif
-            if (palette.Length == 0) throw new ArgumentException();
+            if (palette.Length == 0) throw new ArgumentException("The palette must contain at least one color.", nameof(palette)); ;
 
             _image = image;
             _palette = palette;
