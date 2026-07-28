@@ -21,7 +21,11 @@ namespace AuroraLib.Pixel.Texture
         public override int LevelCount => Levels.Count;
 
         public FlatTexture(IEnumerable<IImage<TColor>> levels)
-            => Levels = new List<IImage<TColor>>(levels);
+        {
+            Levels = new List<IImage<TColor>>(levels);
+            if (Levels.Count == 0)
+                throw new ArgumentException("A texture must contain at least one level.");
+        }
 
         public FlatTexture(IImage<TColor> baseLevel)
             => Levels = new List<IImage<TColor>>() { baseLevel };

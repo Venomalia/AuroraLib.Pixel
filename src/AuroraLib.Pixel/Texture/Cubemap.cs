@@ -65,12 +65,24 @@ namespace AuroraLib.Pixel.Texture
         /// <param name="negativeY">Texture for the negative Y face.</param>
         /// <param name="positiveZ">Texture for the positive Z face.</param>
         /// <param name="negativeZ">Texture for the negative Z face.</param>
-        public Cubemap(FlatTexture<TColor> positiveX, FlatTexture<TColor> negativeX, FlatTexture<TColor> positiveY, FlatTexture<TColor> negativeY, FlatTexture<TColor> positiveZ, FlatTexture<TColor> negativeZ)
+        public Cubemap(FlatTexture<TColor>? positiveX, FlatTexture<TColor>? negativeX, FlatTexture<TColor>? positiveY, FlatTexture<TColor>? negativeY, FlatTexture<TColor>? positiveZ, FlatTexture<TColor>? negativeZ)
         {
+            FlatTexture<TColor> template =
+                positiveX ?? negativeX ??
+                positiveY ?? negativeY ??
+                positiveZ ?? negativeZ ??
+                throw new ArgumentException("At least one face must be provided.");
+
+            positiveX ??= (FlatTexture<TColor>)(negativeX ?? template).Clone();
+            negativeX ??= (FlatTexture<TColor>)positiveX.Clone();
             PositiveX = positiveX;
             NegativeX = negativeX;
+            positiveY ??= (FlatTexture<TColor>)(negativeY ?? template).Clone();
+            negativeY ??= (FlatTexture<TColor>)positiveY.Clone();
             PositiveY = positiveY;
             NegativeY = negativeY;
+            positiveZ ??= (FlatTexture<TColor>)(negativeZ ?? template).Clone();
+            negativeZ ??= (FlatTexture<TColor>)positiveZ.Clone();
             PositiveZ = positiveZ;
             NegativeZ = negativeZ;
 
