@@ -13,6 +13,57 @@ namespace AuroraLib.Pixel.Processing
     public static class ImageExtensions
     {
         /// <summary>
+        /// Gets the continuous range of palette entries referenced by the image pixels.
+        /// </summary>
+        /// <param name="image">The palette image.</param>
+        /// <param name="start">The first used palette index.</param>
+        /// <param name="length">The number of palette entries from the first to the last used index.</param>
+        public static void GetUsedPaletteRange(this IReadOnlyPaletteImage image, out int start, out int length)
+        {
+            ReadOnlySpan<int> refCounts = image.PaletteRefCounts;
+#if NET8_0_OR_GREATER
+            start = refCounts.IndexOfAnyExcept(0);
+            int end = refCounts.LastIndexOfAnyExcept(0);
+#else
+            start = -1;
+            int end = refCounts.Length - 1;
+
+            for (int i = 0; i < refCounts.Length; i++)
+            {
+                if (refCounts[i] == 0)
+                    continue;
+
+                if (start < 0)
+                    start = i;
+                end = i;
+            }
+#endif
+            length = end - start + 1;
+        }
+
+        /// <summary>
+        /// Gets the number of palette entries that are referenced by the image pixels.
+        /// </summary>
+        /// <param name="image">The palette image.</param>
+        /// <returns>The number of palette colors used by the image.</returns>
+        public static int GetUsedColors(this IReadOnlyPaletteImage image)
+        {
+            ReadOnlySpan<int> refCounts = image.PaletteRefCounts;
+
+#if NET8_0_OR_GREATER
+            return refCounts.Length - refCounts.Count(0);
+#else
+            int count = 0;
+            for (int i = 0; i < refCounts.Length; i++)
+            {
+                if (refCounts[i] != 0)
+                    count++;
+            }
+            return count;
+#endif
+        }
+
+        /// <summary>
         /// Gets the bounding rectangle of the image.
         /// </summary>
         /// <param name="image">The image.</param>
