@@ -102,7 +102,7 @@ namespace AuroraLib.Pixel.Image
 
             _image = image;
             _palette = palette;
-            _palette_ref = new int[_palette.Length];
+            _palette_ref = new int[Math.Max(_palette.Length, Math.Min(0x800, 1 << default(TIndex).FormatInfo.BitsPerPixel))];
 
             if (IsEmpty || _palette.Length == 1)
                 _palette_ref[0] = _image.Height * _image.Width;
@@ -198,7 +198,7 @@ namespace AuroraLib.Pixel.Image
             if (index < 0)
             {
                 // Check if there is a free slot available
-                index = _palette_ref.AsSpan().IndexOf(0);
+                index = _palette_ref.AsSpan(0, palett.Length).IndexOf(0);
 
                 // If the palette is full, ask the quantizer which palette color will be replaced/merged.
                 if (index < 0)
@@ -238,7 +238,7 @@ namespace AuroraLib.Pixel.Image
                 if (index < 0)
                 {
                     // Check if there is a free slot available
-                    index = _palette_ref.AsSpan().IndexOf(0);
+                    index = _palette_ref.AsSpan(0,Palette.Length).IndexOf(0);
                     if (index < 0)
                     {
                         // If the palette is full, ask the quantizer which palette color will be replaced/merged.
