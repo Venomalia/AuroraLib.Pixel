@@ -145,7 +145,8 @@ namespace AuroraLib.Pixel.Image
         public IImage<TColor1> CloneAs<TColor1>(Rectangle region) where TColor1 : unmanaged, IColor<TColor1>
         {
             int stride = region == this.GetBounds() ? Stride : default;
-            MemoryImage<TColor1> clone = new MemoryImage<TColor1>(region.Width, region.Height, stride);
+            ImageMetadata? metadata = Metadata != null ? new ImageMetadata(Metadata) : null;
+            MemoryImage<TColor1> clone = new MemoryImage<TColor1>(region.Width, region.Height, stride) { Metadata = metadata };
             clone.CopyFrom(this, region, default);
             return clone;
         }

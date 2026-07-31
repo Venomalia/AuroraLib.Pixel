@@ -40,7 +40,7 @@ namespace AuroraLib.Pixel.Image
         public ReadOnlySpan<int> PaletteRefCounts => _palette_ref.AsSpan();
 
         /// <inheritdoc/>
-        public ImageMetadata? Metadata { get; set; }
+        public ImageMetadata? Metadata { get => _image.Metadata; set => _image.Metadata = value; }
 
         /// <summary>
         /// Gets or sets the color quantizer used by this image. 
@@ -288,7 +288,8 @@ namespace AuroraLib.Pixel.Image
         /// <inheritdoc/>
         public IImage<TColor1> CloneAs<TColor1>(Rectangle region) where TColor1 : unmanaged, IColor<TColor1>
         {
-            PaletteImage<TIndex, TColor1> clone = new PaletteImage<TIndex, TColor1>(_image.CloneAs<TIndex>(region), _palette.Length);
+            ImageMetadata? metadata = Metadata != null ? new ImageMetadata(Metadata) : null;
+            PaletteImage<TIndex, TColor1> clone = new PaletteImage<TIndex, TColor1>(_image.CloneAs<TIndex>(region), _palette.Length) { Metadata = metadata };
             Palette.To(clone.Palette);
             return clone;
         }

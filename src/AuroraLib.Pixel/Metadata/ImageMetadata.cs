@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Numerics;
 
 namespace AuroraLib.Pixel.Metadata
@@ -116,7 +115,13 @@ namespace AuroraLib.Pixel.Metadata
         public Dictionary<string, object> Profiles { get; }
 
         public ImageMetadata()
-            => Profiles = new Dictionary<string, object>();
+        {
+            Profiles = new Dictionary<string, object>();
+            ColorSpace = ColorSpace.sRGB;
+        }
+
+        public ImageMetadata(ImageMetadata metadata) : this(metadata.Profiles)
+        { }
 
         public ImageMetadata(IDictionary<string, object> pairs)
             => Profiles = new Dictionary<string, object>(pairs);

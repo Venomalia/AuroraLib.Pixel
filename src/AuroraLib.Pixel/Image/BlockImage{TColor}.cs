@@ -183,13 +183,14 @@ namespace AuroraLib.Pixel.Image
                 EncodeBlockLine();
 
             IImage<TColor1> clone;
+            ImageMetadata? metadata = Metadata != null ? new ImageMetadata(Metadata) : null;
             if (_block is IBlockProcessor<TColor1> processor)
             {
-                clone = new BlockImage<TColor1>(processor, region.Width, region.Height);
+                clone = new BlockImage<TColor1>(processor, region.Width, region.Height) { Metadata = metadata };
             }
             else
             {
-                clone = new MemoryImage<TColor1>(region.Width, region.Height);
+                clone = new MemoryImage<TColor1>(region.Width, region.Height) { Metadata = metadata };
             }
             clone.CopyFrom(this, region, default);
             return clone;

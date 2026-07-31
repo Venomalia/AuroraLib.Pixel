@@ -1,4 +1,5 @@
 ﻿using AuroraLib.Pixel.Image;
+using AuroraLib.Pixel.Metadata;
 using AuroraLib.Pixel.Processing;
 using System;
 using System.Collections.Generic;
@@ -46,7 +47,10 @@ namespace AuroraLib.Pixel.Texture
 
         /// <inheritdoc/>
         public override IImage<TColor1> CloneAs<TColor1>(Rectangle region)
-            => new FlatTexture<TColor1>(Levels.Select((level, index) =>level.CloneAs<TColor1>(ScaleMipRegion(region, index))));
+        {
+            ImageMetadata? metadata = Metadata != null ? new ImageMetadata(Metadata) : null;
+            return new FlatTexture<TColor1>(Levels.Select((level, index) => level.CloneAs<TColor1>(ScaleMipRegion(region, index)))) { Metadata = metadata };
+        }
 
         private static Rectangle ScaleMipRegion(Rectangle region, int level)
         {

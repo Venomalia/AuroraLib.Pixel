@@ -1,4 +1,5 @@
 ﻿using AuroraLib.Pixel.Image;
+using AuroraLib.Pixel.Metadata;
 using System;
 using System.Drawing;
 
@@ -108,7 +109,15 @@ namespace AuroraLib.Pixel.Texture
 
         /// <inheritdoc/>
         public override IImage<TColor1> CloneAs<TColor1>(Rectangle region)
-            => new Cubemap<TColor1>((FlatTexture<TColor1>)PositiveX.CloneAs<TColor1>(region), (FlatTexture<TColor1>)NegativeX.CloneAs<TColor1>(region), (FlatTexture<TColor1>)PositiveY.CloneAs<TColor1>(region), (FlatTexture<TColor1>)NegativeY.CloneAs<TColor1>(region), (FlatTexture<TColor1>)PositiveZ.CloneAs<TColor1>(region), (FlatTexture<TColor1>)NegativeZ.CloneAs<TColor1>(region));
-
+        {
+            ImageMetadata? metadata = Metadata != null ? new ImageMetadata(Metadata) : null;
+            return new Cubemap<TColor1>((FlatTexture<TColor1>)PositiveX.CloneAs<TColor1>(region),
+                                        (FlatTexture<TColor1>)NegativeX.CloneAs<TColor1>(region),
+                                        (FlatTexture<TColor1>)PositiveY.CloneAs<TColor1>(region),
+                                        (FlatTexture<TColor1>)NegativeY.CloneAs<TColor1>(region),
+                                        (FlatTexture<TColor1>)PositiveZ.CloneAs<TColor1>(region),
+                                        (FlatTexture<TColor1>)NegativeZ.CloneAs<TColor1>(region))
+            { Metadata = metadata };
+        }
     }
 }
