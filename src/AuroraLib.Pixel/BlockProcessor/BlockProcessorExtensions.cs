@@ -1,6 +1,7 @@
 ﻿using AuroraLib.Pixel.Image;
 using System;
 using System.Buffers;
+using System.IO;
 using System.Runtime.CompilerServices;
 
 namespace AuroraLib.Pixel.BlockProcessor
@@ -66,6 +67,50 @@ namespace AuroraLib.Pixel.BlockProcessor
             }
             return size;
         }
+
+        /// <summary>
+        /// Calculates the number of additional mip levels from the total texture data size.
+        /// </summary>
+        /// <param name="format">The block format.</param>
+        /// <param name="width">The width of the base level.</param>
+        /// <param name="height">The height of the base level.</param>
+        /// <param name="dataSize">The total texture data size in bytes.</param>
+        /// <param name="remainingDataSize">Receives the number of bytes remaining after all complete mip levels have been consumed.</param>
+        /// <returns>The number of additional mip levels. A return value of 0 means only the base level is present.</returns>
+        public static int CalculateMipMapCount(this IBlockFormat format, int width, int height, int dataSize, out int remainingDataSize)
+        {
+            int levels = 0;
+
+            while (dataSize > 0 && width != 0 && height != 0)
+            {
+                int size = format.CalculatedDataSize(width, height);
+
+                if (dataSize < size)
+                    break;
+
+                dataSize -= size;
+
+                width >>= 1;
+                height >>= 1;
+                levels++;
+            }
+
+            remainingDataSize = dataSize;
+            return levels - 1;
+        }
+
+        /// <inheritdoc cref="CalculateMipMapCount(IBlockFormat, int, int, int, out int)"/>
+        public static int CalculateMipMapCount(this IBlockFormat format, int width, int height, int dataSize)
+        {
+            int mipMapCount = CalculateMipMapCount(format, width, height, dataSize, out int remainingDataSize);
+
+            if (remainingDataSize != 0)
+                throw new InvalidDataException($"Texture data size does not exactly match a valid mip chain. Remaining bytes: {remainingDataSize}.");
+
+            return mipMapCount;
+        }
+
+
         /// <summary>
         /// Decodes an image from a byte <paramref name="source"/> into an image object.
         /// </summary>
