@@ -1,5 +1,6 @@
 ﻿using AuroraLib.Pixel.Image;
-using AuroraLib.Pixel.Metadata;
+using AuroraLib.Pixel.Processing;
+using AuroraLib.Pixel.Processing.Resampler;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -20,6 +21,48 @@ namespace AuroraLib.Pixel.Texture
         /// <inheritdoc/>
         public override int LevelCount => Levels.Count;
 
+        /// <summary>
+        /// Gets or sets the number of mipmap levels excluding the base level.
+        /// </summary>
+        public int MipMapCount
+        {
+            get => Levels.Count - 1;
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException(nameof(value));
+
+                if (MipMapCount == value)
+                    return;
+
+                if (value < MipMapCount)
+                {
+                    for (int i = Levels.Count - 1; i > value; i--)
+                    {
+                        Levels[i].Dispose();
+                        Levels.RemoveAt(i);
+                    }
+                }
+                else
+                {
+                    for (int i = Levels.Count; i < value + 1; i++)
+                    {
+                        var last = Levels[Levels.Count - 1];
+
+                        if (last.Width == 1 || last.Height == 1)
+                            break;
+
+                        int width = last.Width >> 1;
+                        int height = last.Height >> 1;
+
+                        var mip = (IImage<TColor>)last.Create(width, height);
+                        mip.ResizeFrom(last, Resamplers.Box);
+                        Levels.Add(mip);
+                    }
+                }
+            }
+        }
+
         public FlatTexture(IEnumerable<IImage<TColor>> levels)
         {
             Levels = new List<IImage<TColor>>(levels);
@@ -27,8 +70,11 @@ namespace AuroraLib.Pixel.Texture
                 throw new ArgumentException("A texture must contain at least one level.");
         }
 
-        public FlatTexture(IImage<TColor> baseLevel)
-            => Levels = new List<IImage<TColor>>() { baseLevel };
+        public FlatTexture(IImage<TColor> baseLevel, int mipLevel = 0)
+        {
+            Levels = new List<IImage<TColor>>() { baseLevel };
+            MipMapCount = mipLevel;
+        }
 
         /// <inheritdoc/>
         public override IImage<TColor> GetLevel(int index) => Levels[index];
@@ -46,7 +92,6 @@ namespace AuroraLib.Pixel.Texture
 
         /// <inheritdoc/>
         public override IImage<TColor1> CloneAs<TColor1>(Rectangle region)
-        {
             => new FlatTexture<TColor1>(Levels.Select((level, index) => level.CloneAs<TColor1>(ScaleMipRegion(region, index))));
 
         /// <inheritdoc/>
