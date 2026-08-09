@@ -59,5 +59,12 @@ namespace AuroraLib.Pixel.Image
         /// <param name="region">The region of the image to clone.</param>
         /// <returns>A new <see cref="IImage"/> containing the copied region in the specified color format.</returns>
         IImage<TColor> CloneAs<TColor>(Rectangle region) where TColor : unmanaged, IColor<TColor>;
+
+        /// <summary>
+        /// Creates a new image instance with the specified dimensions.
+        /// </summary>
+        /// <param name="width">The width of the image in pixels.</param>
+        /// <param name="height">The height of the image in pixels.</param>
+        IImage Create(int width, int height);
     }
 }

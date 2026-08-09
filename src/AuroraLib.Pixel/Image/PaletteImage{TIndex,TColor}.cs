@@ -238,7 +238,7 @@ namespace AuroraLib.Pixel.Image
                 if (index < 0)
                 {
                     // Check if there is a free slot available
-                    index = _palette_ref.AsSpan(0,Palette.Length).IndexOf(0);
+                    index = _palette_ref.AsSpan(0, Palette.Length).IndexOf(0);
                     if (index < 0)
                     {
                         // If the palette is full, ask the quantizer which palette color will be replaced/merged.
@@ -293,6 +293,9 @@ namespace AuroraLib.Pixel.Image
             Palette.To(clone.Palette);
             return clone;
         }
+
+        /// <inheritdoc/>
+        public IImage Create(int width, int height) => new PaletteImage<TIndex, TColor>((IImage<TIndex>)_image.Create(width, height));
 
         /// <inheritdoc/>
         public void Apply(IPixelProcessor processor) => processor.Apply(this);

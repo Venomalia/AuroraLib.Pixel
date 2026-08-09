@@ -33,6 +33,9 @@ namespace AuroraLib.Pixel.Texture
         {
             ImageMetadata? metadata = Metadata != null ? new ImageMetadata(Metadata) : null;
             return new FlatTexture<TColor1>(Depths.Select(l => l.CloneAs<TColor1>(region))) { Metadata = metadata };
-        }
+        }        
+        
+        /// <inheritdoc/>
+        public override IImage Create(int width, int height) => new VolumeTexture<TColor>((FlatTexture<TColor>)Depths[0].Create(width, height));
     }
 }

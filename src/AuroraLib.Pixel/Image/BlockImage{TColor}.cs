@@ -197,6 +197,9 @@ namespace AuroraLib.Pixel.Image
         }
 
         /// <inheritdoc/>
+        public IImage Create(int width, int height) => new BlockImage<TColor>(_block, width, height);
+
+        /// <inheritdoc/>
         public Span<TColor> GetWritableRow(int y)
         {
             DecodeBlockLine(y / _block.BlockHeight);

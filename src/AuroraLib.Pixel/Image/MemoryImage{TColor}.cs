@@ -152,6 +152,9 @@ namespace AuroraLib.Pixel.Image
         }
 
         /// <inheritdoc/>
+        public IImage Create(int width, int height) => new MemoryImage<TColor>(width, height, Stride);
+
+        /// <inheritdoc/>
         public void Apply(IPixelProcessor processor) => processor.Apply(this);
 
         /// <inheritdoc/>

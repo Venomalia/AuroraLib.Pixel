@@ -87,6 +87,9 @@ namespace AuroraLib.Pixel.Texture
         public abstract IImage<TColor1> CloneAs<TColor1>(Rectangle region) where TColor1 : unmanaged, IColor<TColor1>;
 
         /// <inheritdoc/>
+        public abstract IImage Create(int width, int height);
+
+        /// <inheritdoc/>
         public void Crop(Rectangle region)
         {
             int baseWidth = BaseLevel.Width, baseHeight = BaseLevel.Height;

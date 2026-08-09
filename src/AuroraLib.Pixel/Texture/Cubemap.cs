@@ -119,5 +119,8 @@ namespace AuroraLib.Pixel.Texture
                                         (FlatTexture<TColor1>)NegativeZ.CloneAs<TColor1>(region))
             { Metadata = metadata };
         }
+
+        /// <inheritdoc/>
+        public override IImage Create(int width, int height) => new Cubemap<TColor>((FlatTexture<TColor>)PositiveX.Create(width, height));
     }
 }
