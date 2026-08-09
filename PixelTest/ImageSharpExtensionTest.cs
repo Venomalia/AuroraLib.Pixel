@@ -1,6 +1,5 @@
 ﻿using AuroraLib.Pixel.Image;
 using AuroraLib.Pixel.ImageSharpExtension;
-using AuroraLib.Pixel.PixelFormats;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;

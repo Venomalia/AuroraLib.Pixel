@@ -1,6 +1,5 @@
 ﻿using AuroraLib.Pixel.Image;
 using AuroraLib.Pixel.Metadata;
-using AuroraLib.Pixel.Processing;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

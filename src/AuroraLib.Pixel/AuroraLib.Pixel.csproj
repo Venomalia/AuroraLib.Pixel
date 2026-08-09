@@ -22,6 +22,7 @@
 	<PropertyGroup>
 		<NETFrameworks>|netstandard2.0|net481|net48|net472|NET471|NET47|NET462|NET461|</NETFrameworks>
 		<Description>lightweight C# library designed for working with raw pixel data. </Description>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="$(NETFrameworks.Contains('|$(TargetFramework)|'))">

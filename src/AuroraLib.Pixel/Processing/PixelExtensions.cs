@@ -246,8 +246,27 @@ namespace AuroraLib.Pixel.Processing
             where TTo : unmanaged, IColor
             => ((ReadOnlySpan<TFrom>)sFrom).To(sTo);
 
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void From<TFrom, TTo>(this ref TTo target, TFrom source)
+            where TFrom : unmanaged, IColor
+            where TTo : unmanaged, IColor
+        {
+            if (typeof(TFrom) == typeof(TTo))
+                target = (TTo)(object)source;
+            else
+                target.FromScaledVector4(source.ToScaledVector4());
+        }
+
+        /// <inheritdoc cref="Blend{TFrom, TTo}(Span{TTo}, ReadOnlySpan{TFrom}, BlendModes.BlendFunction, float)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Blend<TFrom, TTo>(this ref TTo target, TFrom source, BlendModes.BlendFunction blendMode, float intensity = 1f)
+            where TFrom : unmanaged, IColor
+            where TTo : unmanaged, IColor
+            => target.FromScaledVector4(blendMode(target.ToScaledVector4(), source.ToScaledVector4(), intensity));
+
         /// <summary>
-        /// Blends the colors from the <paramref name="source"/> span into the <paramref name="target"/> span using a specified <paramref name="blendMode"/>.
+        /// Blends the colors from the <paramref name="source"/> into the <paramref name="target"/> using a specified <paramref name="blendMode"/>.
         /// </summary>
         /// <typeparam name="TFrom">The type of source colors, which must implement the IColor interface.</typeparam>
         /// <typeparam name="TTo">The type of target color values, which must also implement the IColor interface.</typeparam>
@@ -265,7 +284,7 @@ namespace AuroraLib.Pixel.Processing
 
             for (int i = 0; i < source.Length; i++)
             {
-                target[i].FromScaledVector4(blendMode(target[i].ToScaledVector4(), source[i].ToScaledVector4(), intensity));
+                target[i].Blend(source[i], blendMode, intensity);
             }
         }
 

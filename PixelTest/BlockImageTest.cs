@@ -93,5 +93,6 @@ namespace PixelTest
             Assert.AreEqual(clone[9, 9], image[9, 9]);
             Assert.AreNotEqual(clone[1, 0], image[1, 0]);
         }
+
     }
 }

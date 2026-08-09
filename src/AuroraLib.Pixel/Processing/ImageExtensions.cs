@@ -1,9 +1,14 @@
 ﻿using AuroraLib.Pixel.Image;
 using AuroraLib.Pixel.PixelProcessor;
 using AuroraLib.Pixel.PixelProcessor.Helper;
+using AuroraLib.Pixel.Processing.Helper;
 using AuroraLib.Pixel.Processing.Processor;
+using AuroraLib.Pixel.Processing.Resampler;
+using AuroraLib.Pixel.Texture;
 using System;
 using System.Drawing;
+using System.Linq;
+using System.Numerics;
 
 namespace AuroraLib.Pixel.Processing
 {
@@ -100,22 +105,31 @@ namespace AuroraLib.Pixel.Processing
             if (srcRegion.Width == 0 || srcRegion.Height == 0 || target.Width == 0 || target.Height == 0)
                 return;
 
-            EnsureValidDimensions(ref srcRegion);
-
-
             if (!source.GetBounds().Contains(srcRegion))
                 throw new ArgumentOutOfRangeException(nameof(source), "Region exceeds source image bounds.");
 
             Rectangle targetRegion = new Rectangle(targetCoordinate, srcRegion.Size);
             Rectangle clippedTarget = Rectangle.Intersect(targetRegion, target.GetBounds());
 
-            if (clippedTarget.IsEmpty)
+            if (targetRegion.IsEmpty)
                 return;
 
             if (clippedTarget != targetRegion)
             {
-                srcRegion = new Rectangle(srcRegion.X + clippedTarget.X - targetRegion.X, srcRegion.Y + clippedTarget.Y - targetRegion.Y, clippedTarget.Width, clippedTarget.Height);
-                targetCoordinate = clippedTarget.Location;
+                srcRegion = new Rectangle(srcRegion.X + targetRegion.X - targetRegion.X, srcRegion.Y + targetRegion.Y - targetRegion.Y, targetRegion.Width, targetRegion.Height);
+                targetCoordinate = targetRegion.Location;
+            }
+
+
+            if (target is FlatTexture<TColorT> targets && targets.LevelCount <= 1)
+            {
+                Size targetSize = targets.GetBounds().Size;
+                for (int i = 1; i < targets.LevelCount; i++)
+                {
+                    IImage<TColorT> subTarget = targets.GetLevel(i);
+                    Rectangle subTargetRegion = ScaleRegion(targetRegion, targetSize, subTarget.GetBounds().Size);
+                    ResizeFrom(subTarget, source, srcRegion, subTargetRegion, new BoxResampler(), blendMode, intensity);
+                }
             }
 
             RowAccessor<TColorT> targetPixel = new RowAccessor<TColorT>(target, targetCoordinate.X, srcRegion.Width);
@@ -172,8 +186,6 @@ namespace AuroraLib.Pixel.Processing
             if (mirroring == MirrorAxis.None || region.Width == 0 || region.Height == 0)
                 return;
 
-            EnsureValidDimensions(ref region);
-
             if (!image.GetBounds().Contains(region))
                 throw new ArgumentOutOfRangeException(nameof(region), "Region exceeds image bounds.");
 
@@ -211,19 +223,147 @@ namespace AuroraLib.Pixel.Processing
             }
         }
 
-        private static void EnsureValidDimensions(ref Rectangle region)
+        /// <summary>
+        /// Resizes a region of an image using the specified resampling filter.
+        /// </summary>
+        /// <typeparam name="TColorT">The color type of the target image.</typeparam>
+        /// <typeparam name="TColorS">The color type of the source image.</typeparam>
+        /// <param name="target">The image that receives the resized result.</param>
+        /// <param name="source">The source image to resize from.</param>
+        /// <param name="srcRegion">The source image region to resize.</param>
+        /// <param name="targetRegion">The destination region defining the output size and location.</param>
+        /// <param name="resampler">The resampling filter used for interpolation.</param>
+        /// <param name="blendMode">Optional blending operation used when writing to existing pixels.</param>
+        /// <param name="intensity">Blend intensity used with the blend mode.</param>
+        public static void ResizeFrom<TColorT, TColorS>(this IImage<TColorT> target, IReadOnlyImage<TColorS> source, Rectangle srcRegion, Rectangle targetRegion, IResampler resampler, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+            where TColorT : unmanaged, IColor<TColorT> where TColorS : unmanaged, IColor<TColorS>
         {
-            if (region.Width < 0)
+            if (srcRegion.Width <= 0 || srcRegion.Height <= 0 || targetRegion.Width <= 0 || targetRegion.Height <= 0)
+                return;
+
+            // Source regions are validated.
+            if (!source.GetBounds().Contains(srcRegion))
+                throw new ArgumentOutOfRangeException(nameof(source), "Region exceeds source image bounds.");
+
+            // Clip the target region to the image bounds.
+            targetRegion = Rectangle.Intersect(targetRegion, target.GetBounds());
+
+            if (targetRegion.IsEmpty)
+                return;
+
+            if (target is FlatTexture<TColorT> targets && targets.LevelCount <= 1)
             {
-                region.Width = -region.Width;
-                region.X -= region.Width;
+                Size targetSize = targets.GetBounds().Size;
+                for (int i = 1; i < targets.LevelCount; i++)
+                {
+                    IImage<TColorT> subTarget = targets.GetLevel(i);
+                    Rectangle subTargetRegion = ScaleRegion(targetRegion, targetSize, subTarget.GetBounds().Size);
+                    ResizeFrom(subTarget, source, srcRegion, subTargetRegion, resampler, blendMode, intensity);
+                }
             }
 
-            if (region.Height < 0)
+            // Avoid unnecessary resampling when source and destination sizes match.
+            if (srcRegion.Size == targetRegion.Size)
             {
-                region.Height = -region.Height;
-                region.Y -= region.Height;
+                target.CopyFrom(source, srcRegion, targetRegion.Location, blendMode, intensity);
+                return;
+            }
+
+            // Nearest neighbor does not require precomputed kernels.
+            if (resampler is NearestNeighborResampler)
+            {
+                float scaleX = srcRegion.Width / (float)targetRegion.Width;
+                float scaleY = srcRegion.Height / (float)targetRegion.Height;
+
+                RowAccessor<TColorT> targetPixel = new RowAccessor<TColorT>(target, targetRegion.X, targetRegion.Width);
+                ReadOnlyRowAccessor<TColorS> sourcePixel = new ReadOnlyRowAccessor<TColorS>(source, srcRegion.X, srcRegion.Width);
+
+                for (int y = targetRegion.Top; y < targetRegion.Bottom; y++)
+                {
+                    Span<TColorT> targetRow = targetPixel[y];
+
+                    int sourceY = srcRegion.Y + (int)((y - targetRegion.Y) * scaleY);
+                    ReadOnlySpan<TColorS> sourceRow = sourcePixel[sourceY];
+
+                    for (int x = targetRegion.Left; x < targetRegion.Right; x++)
+                    {
+                        int sourceX = (int)((x - targetRegion.X) * scaleX);
+
+                        if (blendMode is null)
+                            targetRow[x].From(sourceRow[sourceX]);
+                        else
+                            targetRow[x].Blend(sourceRow[sourceX], blendMode, intensity);
+                    }
+
+                    if (targetPixel.IsBuffered)
+                        targetPixel[y] = targetRow;
+                }
+
+                return;
+            }
+            else
+            {
+                // Build X/Y kernels.
+                using ResizeKernelMap kernelMap = new ResizeKernelMap(targetRegion.Size, srcRegion.Size, resampler);
+
+                RowAccessor<TColorT> targetPixel = new RowAccessor<TColorT>(target, targetRegion.X, targetRegion.Width);
+                ReadOnlyRowAccessor<TColorS> sourcePixel = new ReadOnlyRowAccessor<TColorS>(source, srcRegion.X, srcRegion.Width);
+
+                for (int y = targetRegion.Top; y < targetRegion.Bottom; y++)
+                {
+                    Span<TColorT> targetRow = targetPixel[y];
+
+                    Kernel kernelY = kernelMap.Y.Kernels[y - targetRegion.Y];
+                    ReadOnlySpan<float> weightsY = kernelMap.Y.Weights.AsSpan(kernelY.WeightOffset, kernelY.Length);
+
+                    for (int x = targetRegion.Left; x < targetRegion.Right; x++)
+                    {
+                        Kernel kernelX = kernelMap.X.Kernels[x - targetRegion.X];
+                        ReadOnlySpan<float> weightsX = kernelMap.X.Weights.AsSpan(kernelX.WeightOffset, kernelX.Length);
+
+                        Vector4 result = Vector4.Zero;
+                        for (int ky = 0; ky < kernelY.Length; ky++)
+                        {
+                            ReadOnlySpan<TColorS> sourceRow = sourcePixel[srcRegion.Y + kernelY.Start + ky];
+
+                            int sourceX = kernelX.Start;
+                            for (int kx = 0; kx < kernelX.Length; kx++)
+                            {
+                                // Apply the separable filter kernel:
+                                float weight = weightsY[ky] * weightsX[kx];
+                                result += sourceRow[sourceX + kx].ToScaledVector4() * weight;
+                            }
+                        }
+
+                        // Some filters (for example Lanczos) can produce values outside the valid color range.
+                        result = Vector4.Clamp(result, Vector4.Zero, Vector4.One);
+
+                        if (blendMode is null)
+                            targetRow[x].FromScaledVector4(result);
+                        else
+                            targetRow[x].FromScaledVector4(blendMode(targetRow[x].ToScaledVector4(), result, intensity));
+                    }
+
+                    // Write the processed row back when using a buffered accessor.
+                    if (targetPixel.IsBuffered)
+                        targetPixel[y] = targetRow;
+                }
             }
         }
+        private static Rectangle ScaleRegion(Rectangle region, Size from, Size to)
+            => new Rectangle(region.X * to.Width / from.Width, region.Y * to.Height / from.Height, region.Width * to.Width / from.Width, region.Height * to.Height / from.Height);
+
+        /// <inheritdoc cref="ResizeFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, IResampler, BlendModes.BlendFunction?, float)"/>
+        public static void ResizeFrom<TColorT, TColorS>(this IImage<TColorT> target, IReadOnlyImage<TColorS> source, IResampler resampler, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+            where TColorT : unmanaged, IColor<TColorT> where TColorS : unmanaged, IColor<TColorS>
+            => target.ResizeFrom(source, source.GetBounds(), target.GetBounds(), resampler, blendMode, intensity);
+
+        /// <inheritdoc cref="ResizeFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, IResampler, BlendModes.BlendFunction?, float)"/>
+        public static void ResizeFrom(this IImage target, IReadOnlyImage source, Rectangle srcRegion, Rectangle targetRegion, IResampler resampler, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+            => target.Apply(new ResizeProcessor(source, srcRegion, targetRegion, resampler, blendMode, intensity));
+
+        /// <inheritdoc cref="ResizeFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, IResampler, BlendModes.BlendFunction?, float)"/>
+        public static void ResizeFrom(this IImage target, IReadOnlyImage source, IResampler resampler, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+            => target.Apply(new ResizeProcessor(source, source.GetBounds(), target.GetBounds(), resampler, blendMode, intensity));
     }
 }
