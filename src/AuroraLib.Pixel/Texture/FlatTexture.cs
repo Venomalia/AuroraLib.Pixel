@@ -1,5 +1,6 @@
 ﻿using AuroraLib.Pixel.Image;
 using AuroraLib.Pixel.Processing;
+using AuroraLib.Pixel.Processing.Quantizer;
 using AuroraLib.Pixel.Processing.Resampler;
 using System;
 using System.Collections.Generic;
@@ -56,6 +57,14 @@ namespace AuroraLib.Pixel.Texture
                         int height = last.Height >> 1;
 
                         var mip = (IImage<TColor>)last.Create(width, height);
+
+                        // Reuse the same palette for all mipmap levels and prevent palette changes.
+                        if (last is IPaletteImage<TColor> pi && mip is IPaletteImage<TColor> target)
+                        {
+                            target.Palette = pi.Palette;
+                            target.Quantizer = new NearestPaletteColorPicker<TColor>();
+                        }
+
                         mip.ResizeFrom(last, Resamplers.Box);
                         Levels.Add(mip);
                     }
