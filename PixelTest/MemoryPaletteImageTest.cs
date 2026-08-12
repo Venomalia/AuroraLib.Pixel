@@ -131,13 +131,13 @@ namespace PixelTest
 
 
             // Check palette entries
-            Assert.AreEqual(image.Palette[0], Transparent);
-            Assert.AreNotEqual(image.Palette[1], Black);
-            Assert.AreEqual(image.Palette[2], Blue);
-            Assert.AreEqual(image.Palette[3], Green);
+            Assert.AreEqual(image.Palette.Span[0], Transparent);
+            Assert.AreNotEqual(image.Palette.Span[1], Black);
+            Assert.AreEqual(image.Palette.Span[2], Blue);
+            Assert.AreEqual(image.Palette.Span[3], Green);
 
             // Ensure pixels resolve to expected palette colors
-            RGBA32 darkGray = image.Palette[1];
+            RGBA32 darkGray = image.Palette.Span[1];
             Assert.AreEqual(darkGray, image[0, 0]);
             Assert.AreEqual(darkGray, image[9, 0]);
             Assert.AreEqual(Green, image[0, 9]);

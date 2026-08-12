@@ -15,7 +15,7 @@ namespace AuroraLib.Pixel.Processing.Quantizer
         /// <inheritdoc/>
         public int ResolveColor(IPaletteImage<TColor> image, TColor newColor, int newColorCount = 1)
         {
-            var palette = image.Palette;
+            var palette = image.Palette.Span;
             // Convert all palette colors to Vector4 for distance calculations, Extra slot at the end for the new color.
             using IMemoryOwner<Vector4> memoryBuffer = MemoryPool<Vector4>.Shared.Rent(palette.Length + 1);
             Span<Vector4> buffer = memoryBuffer.Memory.Span.Slice(0, palette.Length + 1);

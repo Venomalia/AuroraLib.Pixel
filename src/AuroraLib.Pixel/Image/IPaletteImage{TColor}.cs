@@ -12,7 +12,7 @@ namespace AuroraLib.Pixel.Image
         /// <summary>
         /// Gets a writable List of <typeparamref name="TColor"/> representing the palette.
         /// </summary>
-        new Span<TColor> Palette { get; }
+        new Memory<TColor> Palette { get; set; }
 
         /// <summary>
         /// Sets the index of the color in the palette for the pixel at the specified position (x, y).

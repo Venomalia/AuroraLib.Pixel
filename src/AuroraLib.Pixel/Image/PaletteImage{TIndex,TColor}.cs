@@ -22,8 +22,10 @@ namespace AuroraLib.Pixel.Image
         where TIndex : unmanaged, IIndexColor, IColor<TIndex>
         where TColor : unmanaged, IColor<TColor>
     {
+        private static int MaxColors = 1 << default(TIndex).FormatInfo.BitsPerPixel;
+
         private readonly IImage<TIndex> _image;
-        private readonly TColor[] _palette;
+        private Memory<TColor> _palette;
         private readonly int[] _palette_ref;
 
         /// <inheritdoc/>
@@ -32,9 +34,9 @@ namespace AuroraLib.Pixel.Image
         public int Height => _image.Height;
 
         /// <inheritdoc/>
-        public Span<TColor> Palette => _palette.AsSpan();
+        public Memory<TColor> Palette { get => _palette; set => _palette = value.Slice(0, Math.Min(value.Length, MaxColors)); }
 
-        ReadOnlySpan<TColor> IReadOnlyPaletteImage<TColor>.Palette => Palette;
+        ReadOnlySpan<TColor> IReadOnlyPaletteImage<TColor>.Palette => Palette.Span;
 
         /// <inheritdoc/>
         public ReadOnlySpan<int> PaletteRefCounts => _palette_ref.AsSpan();
@@ -46,7 +48,7 @@ namespace AuroraLib.Pixel.Image
         /// Gets or sets the color quantizer used by this image. 
         /// The quantizer determines how new colors are added to the palette.
         /// </summary>
-        public IColorQuantizer<TColor> Quantizer { get; set; } = new MergePaletteQuantizer<TColor>();
+        public IColorQuantizer<TColor> Quantizer { get; set; }
 
         PixelFormatInfo IReadOnlyImage.PixelFormat => default(TColor).FormatInfo;
 
@@ -55,15 +57,17 @@ namespace AuroraLib.Pixel.Image
         /// </summary>
         /// <param name="image">The indexed image containing palette indices of type <typeparamref name="TIndex"/>.</param>
         /// <param name="palette">The color palette. Each index in the image maps to a color in this span.</param>
-        public PaletteImage(IImage<TIndex> image, ReadOnlySpan<TColor> palette) : this(image, palette.Length)
-        => palette.CopyTo(_palette);
+        /// <param name="quantizer">The color quantizer used to resolve colors that are not present in the palette.</param>
+        public PaletteImage(IImage<TIndex> image, ReadOnlySpan<TColor> palette, IColorQuantizer<TColor>? quantizer = null) : this(image, palette.Length, false, quantizer)
+        => palette.CopyTo(Palette.Span);
 
         /// <summary>
         /// Initializes a new <see cref="PaletteImage{TIndex, TColor}"/> using an indexed image and a requested palette size.
         /// </summary>
         /// <param name="image">The indexed image containing palette indices of type <typeparamref name="TIndex"/>.</param>
         /// <param name="requestedPaletteSize">The desired number of palette entries. Limited by the bit depth of <typeparamref name="TIndex"/>.</param>
-        public PaletteImage(IImage<TIndex> image, int requestedPaletteSize = 2048) : this(image, requestedPaletteSize, false)
+        /// <param name="quantizer">The color quantizer used to resolve colors that are not present in the palette.</param>
+        public PaletteImage(IImage<TIndex> image, int requestedPaletteSize = 2048, IColorQuantizer<TColor>? quantizer = null) : this(image, requestedPaletteSize, false, quantizer)
         { }
 
         /// <summary>
@@ -73,8 +77,9 @@ namespace AuroraLib.Pixel.Image
         /// <param name="height">The height of the image in pixels.</param>
         /// <param name="stride">The number of pixels per image row.</param>
         /// <param name="requestedPaletteSize">The desired number of palette entries. The actual size is limited by the bit depth of <typeparamref name="TIndex"/>.
-        public PaletteImage(int width, int height, int stride = default, int requestedPaletteSize = 4095)
-            : this(new MemoryImage<TIndex>(width, height, stride, true), requestedPaletteSize, true)
+        /// <param name="quantizer">The color quantizer used to resolve colors that are not present in the palette.</param>
+        public PaletteImage(int width, int height, int stride = default, int requestedPaletteSize = 4095, IColorQuantizer<TColor>? quantizer = null)
+            : this(new MemoryImage<TIndex>(width, height, stride, true), requestedPaletteSize, true, quantizer)
         { }
 
         /// <summary>
@@ -83,28 +88,28 @@ namespace AuroraLib.Pixel.Image
         /// </summary>
         /// <param name="image">The indexed image containing palette indices.</param>
         /// <param name="palette">The palette entries used to resolve the indices.</param>
-        public PaletteImage(IImage<TIndex> image, TColor[] palette) : this(image, palette, false)
+        /// <param name="quantizer">The color quantizer used to resolve colors that are not present in the palette.</param>
+        public PaletteImage(IImage<TIndex> image, Memory<TColor> palette, IColorQuantizer<TColor>? quantizer = null) : this(image, palette, false, quantizer)
         { }
 
-        internal PaletteImage(IImage<TIndex> image, int requestedPaletteSize, bool IsEmpty) : this(image, new TColor[Math.Min(requestedPaletteSize, 1 << default(TIndex).FormatInfo.BitsPerPixel)], IsEmpty)
+        internal PaletteImage(IImage<TIndex> image, int requestedPaletteSize, bool IsEmpty, IColorQuantizer<TColor>? quantizer) : this(image, new TColor[Math.Min(requestedPaletteSize, 1 << default(TIndex).FormatInfo.BitsPerPixel)], IsEmpty, quantizer)
         { }
 
-        private PaletteImage(IImage<TIndex> image, TColor[] palette, bool IsEmpty)
+        private PaletteImage(IImage<TIndex> image, Memory<TColor> palette, bool IsEmpty, IColorQuantizer<TColor>? quantizer)
         {
 #if NET8_0_OR_GREATER
             ArgumentNullException.ThrowIfNull(image);
-            ArgumentNullException.ThrowIfNull(palette);
 #else
             if (image is null) throw new ArgumentNullException(nameof(image));
-            if (palette is null) throw new ArgumentNullException(nameof(palette));
 #endif
             if (palette.Length == 0) throw new ArgumentException("The palette must contain at least one color.", nameof(palette)); ;
 
             _image = image;
-            _palette = palette;
-            _palette_ref = new int[Math.Max(_palette.Length, Math.Min(0x800, 1 << default(TIndex).FormatInfo.BitsPerPixel))];
+            Palette = palette;
+            _palette_ref = new int[Math.Max(Palette.Length, Math.Min(0x1000, MaxColors))];
+            Quantizer = quantizer ?? new MergePaletteQuantizer<TColor>();
 
-            if (IsEmpty || _palette.Length == 1)
+            if (IsEmpty || Palette.Length == 1)
                 _palette_ref[0] = _image.Height * _image.Width;
             else
                 CalculateColorsUsed(image, _palette_ref);
@@ -116,7 +121,7 @@ namespace AuroraLib.Pixel.Image
             get
             {
                 int index = GetPixelIndex(x, y);
-                return Palette[index];
+                return Palette.Span[index];
             }
             set
             {
@@ -149,7 +154,7 @@ namespace AuroraLib.Pixel.Image
                 throw new ArgumentOutOfRangeException(nameof(y));
 
             int toCopy = Math.Min(pixelRow.Length, Width - x);
-            ReadOnlySpan<TColor> palette = Palette;
+            ReadOnlySpan<TColor> palette = Palette.Span;
 
             if (_image is IReadOnlyDirectRowAccess<TIndex> imageRowAccess)
             {
@@ -190,7 +195,7 @@ namespace AuroraLib.Pixel.Image
 
         private int GetOrAddColorIndex(TColor newColor, int oldIndex)
         {
-            var palett = _palette.AsSpan();
+            var palett = Palette.Span;
             _palette_ref[oldIndex]--;
 
             // If the color is not in the palette
@@ -213,7 +218,7 @@ namespace AuroraLib.Pixel.Image
 
         private void GetOrAddColorIndices(ReadOnlySpan<TColor> newColors, Span<TIndex> indices)
         {
-            var palett = _palette.AsSpan();
+            var palett = Palette.Span;
 
             for (int i = 0; i < indices.Length; i++)
             {
@@ -270,7 +275,7 @@ namespace AuroraLib.Pixel.Image
         public void Clear()
         {
             _image.Clear();
-            _palette.AsSpan().Clear();
+            Palette.Span.Clear();
             _palette_ref.AsSpan().Clear();
             _palette_ref[0] = _image.Height * _image.Width;
         }
@@ -289,8 +294,8 @@ namespace AuroraLib.Pixel.Image
         public IImage<TColor1> CloneAs<TColor1>(Rectangle region) where TColor1 : unmanaged, IColor<TColor1>
         {
             ImageMetadata? metadata = Metadata != null ? new ImageMetadata(Metadata) : null;
-            PaletteImage<TIndex, TColor1> clone = new PaletteImage<TIndex, TColor1>(_image.CloneAs<TIndex>(region), _palette.Length) { Metadata = metadata };
-            Palette.To(clone.Palette);
+            PaletteImage<TIndex, TColor1> clone = new PaletteImage<TIndex, TColor1>(_image.CloneAs<TIndex>(region), Palette.Length) { Metadata = metadata };
+            Palette.Span.To(clone.Palette.Span);
             return clone;
         }
 

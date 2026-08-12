@@ -91,7 +91,7 @@ namespace AuroraLib.Pixel.BitmapExtension
         {
             var rawbitmapPalette = bitmapPalette.Entries.AsSpan();
             var paletteImage = new PaletteImage<TColor, BGRA<byte>>(imageData, rawbitmapPalette.Length);
-            var auroraPalette = paletteImage.Palette;
+            var auroraPalette = paletteImage.Palette.Span;
             for (int i = 0; i < rawbitmapPalette.Length; i++)
                 auroraPalette[i] = rawbitmapPalette[i];
 
