@@ -44,10 +44,7 @@ namespace AuroraLib.Pixel.Image
         /// <inheritdoc/>
         public ImageMetadata? Metadata { get => _image.Metadata; set => _image.Metadata = value; }
 
-        /// <summary>
-        /// Gets or sets the color quantizer used by this image. 
-        /// The quantizer determines how new colors are added to the palette.
-        /// </summary>
+        /// <inheritdoc/>
         public IColorQuantizer<TColor> Quantizer { get; set; }
 
         PixelFormatInfo IReadOnlyImage.PixelFormat => default(TColor).FormatInfo;

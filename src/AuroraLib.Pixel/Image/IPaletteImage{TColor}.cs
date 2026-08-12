@@ -1,4 +1,5 @@
 ﻿using AuroraLib.Pixel.Processing.Processor;
+using AuroraLib.Pixel.Processing.Quantizer;
 using System;
 
 namespace AuroraLib.Pixel.Image
@@ -13,6 +14,12 @@ namespace AuroraLib.Pixel.Image
         /// Gets a writable List of <typeparamref name="TColor"/> representing the palette.
         /// </summary>
         new Memory<TColor> Palette { get; set; }
+
+        /// <summary>
+        /// Gets or sets the color quantizer used by this image. 
+        /// The quantizer determines how new colors are added to the palette.
+        /// </summary>
+        IColorQuantizer<TColor> Quantizer { get; set; }
 
         /// <summary>
         /// Sets the index of the color in the palette for the pixel at the specified position (x, y).
