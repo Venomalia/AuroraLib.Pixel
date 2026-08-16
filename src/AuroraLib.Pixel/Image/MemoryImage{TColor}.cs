@@ -111,7 +111,17 @@ namespace AuroraLib.Pixel.Image
             if (height <= 0) throw new ArgumentOutOfRangeException(nameof(height));
 #endif
             if (stride < width)
-                stride = NextPowerOfTwo(width);
+            {
+                // Calculate a 4-byte aligned pixel stride to match the standard graphics API layout.
+                int bytesPerPixel = Unsafe.SizeOf<TColor>();
+                stride = bytesPerPixel switch
+                {
+                    3 => (width + 3) & ~3,
+                    4 => width,
+                    6 => (width + 1) & ~1,
+                    _ => ((width * bytesPerPixel + 3) & ~3) / bytesPerPixel,
+                };
+            }
 
             int pixel = stride * height;
             var pool = MemoryPool<TColor>.Shared.Rent(pixel);
@@ -201,8 +211,6 @@ namespace AuroraLib.Pixel.Image
             if ((uint)y >= Height)
                 ThrowOutOfBoundsOfImage(y, Height, nameof(y), nameof(Height));
         }
-
-        private static int NextPowerOfTwo(int x) => (int)Math.Pow(2, Math.Ceiling(Math.Log(x, 2)));
 
         [MethodImpl(MethodImplOptions.NoInlining)]
 #if NET6_0_OR_GREATER
