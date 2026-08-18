@@ -43,6 +43,21 @@ namespace AuroraLib.Pixel.Texture
         /// <inheritdoc/>
         public override int LevelCount => 6;
 
+        /// <inheritdoc/>
+        public override int MipMapCount
+        {
+            get => PositiveX.MipMapCount;
+            set
+            {
+                PositiveX.MipMapCount = value;
+                NegativeX.MipMapCount = value;
+                PositiveY.MipMapCount = value;
+                NegativeY.MipMapCount = value;
+                PositiveZ.MipMapCount = value;
+                NegativeZ.MipMapCount = value;
+            }
+        }
+
         /// <summary>
         /// Initializes a new cubemap where all six faces are clones of the provided base surface.
         /// </summary>

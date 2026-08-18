@@ -19,6 +19,17 @@ namespace AuroraLib.Pixel.Texture
         /// <inheritdoc/>
         public override int LevelCount => Depths.Count;
 
+        /// <inheritdoc/>
+        public override int MipMapCount
+        {
+            get => Depths[0].MipMapCount;
+            set
+            {
+                foreach (var level in Depths)
+                    level.MipMapCount = value;
+            }
+        }
+
         public VolumeTexture(IEnumerable<FlatTexture<TColor>> depths)
             => Depths = new List<FlatTexture<TColor>>(depths);
 

@@ -22,6 +22,11 @@ namespace AuroraLib.Pixel.Texture
         public abstract int LevelCount { get; }
 
         /// <summary>
+        /// Gets or sets the number of mipmap levels excluding the base level.
+        /// </summary>
+        public abstract int MipMapCount { get; set; }
+
+        /// <summary>
         /// Retrieves the specified level from this texture. Level 0 represents the base level.
         /// </summary>
         /// <param name="index">The zero-based mipmap level index to retrieve.</param>

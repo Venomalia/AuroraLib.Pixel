@@ -22,10 +22,9 @@ namespace AuroraLib.Pixel.Texture
         /// <inheritdoc/>
         public override int LevelCount => Levels.Count;
 
-        /// <summary>
-        /// Gets or sets the number of mipmap levels excluding the base level.
-        /// </summary>
-        public int MipMapCount
+
+        /// <inheritdoc/>
+        public override int MipMapCount
         {
             get => Levels.Count - 1;
             set
