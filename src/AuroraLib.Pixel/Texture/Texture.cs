@@ -79,7 +79,7 @@ namespace AuroraLib.Pixel.Texture
         }
 
         void IReadOnlyImage.Apply(IReadOnlyPixelProcessor processor)
-            => BaseLevel.Apply(processor);
+            => processor.Apply(this);
 
         void IReadOnlyImage<TColor>.GetPixel(int x, int y, Span<TColor> pixelRow) => BaseLevel.GetPixel(x, y, pixelRow);
 
