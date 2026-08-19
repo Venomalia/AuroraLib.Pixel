@@ -6,19 +6,23 @@
     public enum TransparencyMode : byte
     {
         /// <summary>
-        /// No transparency is used, the image is fully opaque suitable for normal solid objects with no transparent areas.
+        /// No transparency is used, all pixels are fully opaque.
         /// </summary>
         Opaque,
 
         /// <summary>
-        /// Only fully transparent pixels are treated as transparent (binary cutout).
+        /// Only fully opaque and fully transparent pixels are used (binary cutout).
         /// </summary>
         Cutout,
 
         /// <summary>
-        /// Allows Partial Transperancy using alpha blending.
+        /// Partial transparency using straight alpha, where RGB channels are stored independently of alpha.
         /// </summary>
-        Transparent,
+        Straight,
 
+        /// <summary>
+        /// Partial transparency using premultiplied alpha, where RGB channels are multiplied by alpha.
+        /// </summary>
+        Premultiplied
     }
 }
