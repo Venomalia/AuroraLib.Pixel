@@ -7,9 +7,12 @@ using AuroraLib.Pixel.Processing.Processor;
 using AuroraLib.Pixel.Processing.Resampler;
 using AuroraLib.Pixel.Texture;
 using System;
+using System.Buffers;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace AuroraLib.Pixel.Processing
 {
@@ -395,5 +398,74 @@ namespace AuroraLib.Pixel.Processing
         /// <inheritdoc cref="Apply{TResult}(IReadOnlyImage, Analyzer{TResult}, Rectangle)"/>
         public static void Apply<TResult>(this IReadOnlyImage image, Analyzer<TResult> analyzer)
             => Apply(image, analyzer, image.GetBounds());
+
+        /// <summary>
+        /// Processes a span of image pixels.
+        /// </summary>
+        /// <typeparam name="TColor">The pixel color type.</typeparam>
+        /// <param name="pixels">The pixels to process.</param>
+        public delegate void PixelProcessor<TColor>(Span<TColor> pixels) where TColor : unmanaged, IColor<TColor>;
+
+        /// <summary>
+        /// Applies a pixel operation to an image.
+        /// </summary>
+        /// <typeparam name="TColor">The pixel color type.</typeparam>
+        /// <param name="image">The image to process.</param>
+        /// <param name="operation">The operation to apply to the pixels.</param>
+        /// <param name="region">The region of the image to process.</param>
+        public static void Apply<TColor>(this IImage<TColor> image, PixelProcessor<TColor> operation, Rectangle region) where TColor : unmanaged, IColor<TColor>
+        {
+            bool all = region == image.GetBounds();
+            if (all && image is IPaletteImage<TColor> p)
+            {
+                p.GetUsedPaletteRange(out int start, out int length);
+                operation(p.Palette.Span.Slice(start, length));
+            }
+            else if (image is Texture<TColor> tex)
+            {
+                Size targetSize = image.GetBounds().Size;
+                foreach (var level in tex)
+                {
+                    Rectangle mipRegion = ScaleRegion(region, targetSize, level.GetBounds().Size);
+                    level.Apply(operation, mipRegion);
+                }
+            }
+            else if (all && image is MemoryImage<TColor> mImage && mImage.Width == mImage.Stride)
+            {
+                operation(mImage.Pixel);
+            }
+            else if (image is IDirectRowAccess<TColor> rowAccess)
+            {
+                for (int y = region.Y; y < region.Bottom; y++)
+                    operation(rowAccess.GetWritableRow(y).Slice(region.X, region.Width));
+            }
+            else
+            {
+                const int StackallocThreshold = 4096;
+                int rowBytes = region.Width * Unsafe.SizeOf<TColor>();
+                byte[]? buffer = rowBytes > StackallocThreshold ? ArrayPool<byte>.Shared.Rent(rowBytes) : null;
+                Span<TColor> row = buffer == null ? stackalloc TColor[region.Width] : MemoryMarshal.Cast<byte, TColor>(buffer.AsSpan(0, rowBytes));
+
+                try
+                {
+                    for (int y = region.Y; y < region.Bottom; y++)
+                    {
+                        image.GetPixel(region.X, y, row);
+                        operation(row);
+                        image.SetPixel(region.X, y, row);
+                    }
+                }
+                finally
+                {
+                    if (buffer != null)
+                        ArrayPool<byte>.Shared.Return(buffer);
+                }
+            }
+        }
+
+        /// <inheritdoc cref="Apply{TColor}(IImage{TColor}, PixelProcessor{TColor}, Rectangle)"/>
+        public static void Apply<TColor>(this IImage<TColor> image, PixelProcessor<TColor> operation) where TColor : unmanaged, IColor<TColor>
+            => Apply(image, operation, image.GetBounds());
+
     }
 }
