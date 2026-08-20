@@ -27,6 +27,7 @@ namespace AuroraLib.Pixel.Processing.Analyzer
 
         protected override bool Analyze<TColor>(ReadOnlySpan<TColor> pixels, ref TransparencyMode state)
         {
+            bool isBinaryAlpha = default(TColor).FormatInfo.AlphaChannelInfo.BitDepth == 1;
             RGBA<byte> rgba = default;
 
             for (int i = 0; i < pixels.Length; i++)
@@ -40,6 +41,8 @@ namespace AuroraLib.Pixel.Processing.Analyzer
 
                     case byte.MinValue:
                         state = TransparencyMode.Cutout;
+                        if (isBinaryAlpha)
+                            return true;
                         break;
 
                     default:
