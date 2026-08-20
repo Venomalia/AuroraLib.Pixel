@@ -1,6 +1,7 @@
 ﻿using AuroraLib.Pixel.Image;
 using AuroraLib.Pixel.PixelProcessor;
 using AuroraLib.Pixel.PixelProcessor.Helper;
+using AuroraLib.Pixel.Processing.Analyzer;
 using AuroraLib.Pixel.Processing.Helper;
 using AuroraLib.Pixel.Processing.Processor;
 using AuroraLib.Pixel.Processing.Resampler;
@@ -164,7 +165,7 @@ namespace AuroraLib.Pixel.Processing
 
         /// <inheritdoc cref="CopyFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Point, BlendModes.BlendFunction?, float)"/>
         public static void CopyFrom(this IImage target, IReadOnlyImage source, Rectangle srcRegion, Point targetCoordinate, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
-            => target.Apply(new CopyRegionProcessor(source, srcRegion, targetCoordinate, blendMode, intensity));
+            => target.Apply(new CopyRegionProcessor(source, srcRegion, blendMode, intensity), new Rectangle(targetCoordinate, new Size(target.Width, target.Height)));
 
         /// <inheritdoc cref="CopyFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Point, BlendModes.BlendFunction?, float)"/>
         public static void CopyFrom(this IImage target, IReadOnlyImage source, Point targetCoordinate, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
@@ -375,5 +376,24 @@ namespace AuroraLib.Pixel.Processing
         /// <inheritdoc cref="IImage.Apply(IPixelProcessor, Rectangle)"/>
         public static void Apply(this IImage image, IPixelProcessor processor)
             => image.Apply(processor, image.GetBounds());
+
+        /// <summary>
+        /// Analyzes the specified image region using the provided analyzer.
+        /// </summary>
+        /// <typeparam name="TResult">The type of result produced by the analyzer.</typeparam>
+        /// <param name="image">The image to analyze.</param>
+        /// <param name="analyzer">The analyzer to use.</param>
+        /// <param name="region">The region of the image to analyze.</param>
+        /// <returns>The result of the analysis.</returns>
+        public static TResult Apply<TResult>(this IReadOnlyImage image, Analyzer<TResult> analyzer, Rectangle region)
+        {
+            var processor = new AnalyzerProcessor<TResult>(analyzer);
+            image.Apply(processor, region);
+            return processor.Result;
+        }
+
+        /// <inheritdoc cref="Apply{TResult}(IReadOnlyImage, Analyzer{TResult}, Rectangle)"/>
+        public static void Apply<TResult>(this IReadOnlyImage image, Analyzer<TResult> analyzer)
+            => Apply(image, analyzer, image.GetBounds());
     }
 }
