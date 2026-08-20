@@ -1,4 +1,5 @@
 ﻿using AuroraLib.Pixel.Image;
+using System.Drawing;
 
 namespace AuroraLib.Pixel.Processing.Processor
 {
@@ -10,11 +11,12 @@ namespace AuroraLib.Pixel.Processing.Processor
         /// <summary>
         /// Applies the processor logic to the specified image without modifying its pixels.
         /// <para>
-        /// To use this method, call <see cref="IReadOnlyImage.Apply(IReadOnlyPixelProcessor)"/> on an image instance.
+        /// To use this method, call <see cref="IReadOnlyImage.Apply(IReadOnlyPixelProcessor, Rectangle)"/> on an image instance.
         /// </para>
         /// </summary>
         /// <typeparam name="TColor">The pixel color type.</typeparam>
         /// <param name="image">The image to process.</param>
-        public void Apply<TColor>(IReadOnlyImage<TColor> image) where TColor : unmanaged, IColor<TColor>;
+        /// <param name="region">The area of the source image to be processed.</param>
+        public void Apply<TColor>(IReadOnlyImage<TColor> image, Rectangle region) where TColor : unmanaged, IColor<TColor>;
     }
 }

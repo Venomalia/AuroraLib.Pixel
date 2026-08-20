@@ -12,16 +12,6 @@ namespace AuroraLib.Pixel.Processing.Processor
     public sealed class ResizeProcessor : DoubleImageProcessor
     {
         /// <summary>
-        /// The region of the source image to resize.
-        /// </summary>
-        private Rectangle SrcRegion { get; set; }
-
-        /// <summary>
-        /// The destination region where the resized image is written.
-        /// </summary>
-        public Rectangle TargetRegion { get; set; }
-
-        /// <summary>
         /// The resampling filter used to calculate the resized pixels.
         /// </summary>
         public IResampler Resampler { get; set; }
@@ -45,17 +35,15 @@ namespace AuroraLib.Pixel.Processing.Processor
         /// <param name="resampler">The resampling filter used for interpolation.</param>
         /// <param name="blendMode">The optional blend mode to apply to the resized pixels.</param>
         /// <param name="intensity">The intensity of the blending operation.</param>
-        public ResizeProcessor(IReadOnlyImage source, Rectangle srcRegion, Rectangle targetRegion, IResampler resampler, BlendModes.BlendFunction? blendMode = null, float intensity = 1f) : base(source)
+        public ResizeProcessor(IReadOnlyImage source, Rectangle srcRegion, IResampler resampler, BlendModes.BlendFunction? blendMode = null, float intensity = 1f) : base(source, srcRegion)
         {
-            SrcRegion = srcRegion;
-            TargetRegion = targetRegion;
             Resampler = resampler;
             BlendMode = blendMode;
             Intensity = intensity;
         }
 
         /// <inheritdoc/>
-        protected override void Apply<TColorT, TColorS>(IImage<TColorT> target, IReadOnlyImage<TColorS> source)
-            => target.ResizeFrom(source, SrcRegion, TargetRegion, Resampler, BlendMode, Intensity);
+        protected override void Apply<TColorT, TColorS>(IImage<TColorT> target, IReadOnlyImage<TColorS> source, Rectangle targetRegion, Rectangle sourceRegion)
+            => target.ResizeFrom(source, sourceRegion, targetRegion, Resampler, BlendMode, Intensity);
     }
 }

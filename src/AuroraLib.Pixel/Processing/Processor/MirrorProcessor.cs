@@ -14,35 +14,25 @@ namespace AuroraLib.Pixel.Processing.Processor
         public MirrorAxis Mirroring { get; set; }
 
         /// <summary>
-        /// Gets or sets the rectangle region of the image to be mirrored.
-        /// </summary>
-        public Rectangle Region { get; set; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="MirrorProcessor"/> class with the specified axis and rectangle.
         /// </summary>
         /// <param name="mirroring">The axis along which the image will be mirrored.</param>
-        /// <param name="region">The rectangle that defines the region of the image to be mirrored.</param>
-        public MirrorProcessor(MirrorAxis mirroring, Rectangle region)
-        {
-            Mirroring = mirroring;
-            Region = region;
-        }
+        public MirrorProcessor(MirrorAxis mirroring) => Mirroring = mirroring;
 
         /// <inheritdoc/>
-        public void Apply<TColor>(IImage<TColor> image) where TColor : unmanaged, IColor<TColor>
+        public void Apply<TColor>(IImage<TColor> image, Rectangle region) where TColor : unmanaged, IColor<TColor>
         {
-            if (Mirroring == MirrorAxis.None || Region.Width == 0 || Region.Height == 0)
+            if (Mirroring == MirrorAxis.None || region.Width == 0 || region.Height == 0)
                 return;
 
             if (image is IPaletteImage<TColor> paletteImage)
             {
                 // We mirror the values directly in the index image.
-                paletteImage.ApplyToIndices(this);
+                paletteImage.ApplyToIndices(this, region);
                 return;
             }
 
-            image.Mirror(Mirroring, Region);
+            image.Mirror(Mirroring, region);
         }
     }
 }

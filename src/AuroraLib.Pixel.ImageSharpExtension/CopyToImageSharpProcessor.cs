@@ -14,7 +14,7 @@ namespace AuroraLib.Pixel.ImageSharpExtension
 
         public CopyToImageSharpProcessor(Image<TPixel> target) => Target = target;
 
-        public void Apply<TColor>(IReadOnlyImage<TColor> image) where TColor : unmanaged, IColor<TColor>
+        public void Apply<TColor>(IReadOnlyImage<TColor> image, System.Drawing.Rectangle region) where TColor : unmanaged, IColor<TColor>
         {
             CopyFrom(Target, image);
         }

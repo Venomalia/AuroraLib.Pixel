@@ -68,18 +68,17 @@ namespace AuroraLib.Pixel.Texture
         }
         Vector4 IReadOnlyImage.this[int x, int y] => ((IReadOnlyImage)BaseLevel)[x, y];
 
-        void IImage.Apply(IPixelProcessor processor)
+        void IImage.Apply(IPixelProcessor processor, Rectangle region)
         {
             int baseWidth = BaseLevel.Width, baseHeight = BaseLevel.Height;
             foreach (var level in this)
             {
                 if (baseWidth == level.Width && baseHeight == level.Height)
-                    level.Apply(processor);
+                    level.Apply(processor, region);
             }
         }
 
-        void IReadOnlyImage.Apply(IReadOnlyPixelProcessor processor)
-            => processor.Apply(this);
+        void IReadOnlyImage.Apply(IReadOnlyPixelProcessor processor, Rectangle region) => processor.Apply(this, region);
 
         void IReadOnlyImage<TColor>.GetPixel(int x, int y, Span<TColor> pixelRow) => BaseLevel.GetPixel(x, y, pixelRow);
 

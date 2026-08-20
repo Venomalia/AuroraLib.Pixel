@@ -1,4 +1,5 @@
 ﻿using AuroraLib.Pixel.Image;
+using System.Drawing;
 
 namespace AuroraLib.Pixel.Processing.Processor
 {
@@ -13,15 +14,23 @@ namespace AuroraLib.Pixel.Processing.Processor
         protected IReadOnlyImage SourceImage { get; set; }
 
         /// <summary>
+        /// The area of the source image to be processed.
+        /// </summary>
+        protected Rectangle SourceRegion { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="DoubleImageProcessor"/> class with the specified source image.
         /// </summary>
         /// <param name="sourceImage">The source image used as input during processing.</param>
-        protected DoubleImageProcessor(IReadOnlyImage sourceImage)
-            => SourceImage = sourceImage;
+        protected DoubleImageProcessor(IReadOnlyImage sourceImage, Rectangle region)
+        {
+            SourceImage = sourceImage;
+            SourceRegion = region;
+        }
 
         /// <inheritdoc/>
-        public void Apply<TColor>(IImage<TColor> target) where TColor : unmanaged, IColor<TColor>
-            => SourceImage.Apply(new PixelProcessorActivator<TColor>(target, this));
+        public void Apply<TColor>(IImage<TColor> target, Rectangle region) where TColor : unmanaged, IColor<TColor>
+            => SourceImage.Apply(new PixelProcessorActivator<TColor>(target, region, this), SourceRegion);
 
         /// <summary>
         /// Applies the image processing operation using the specified source and target images.
@@ -30,22 +39,24 @@ namespace AuroraLib.Pixel.Processing.Processor
         /// <typeparam name="TColor2">The pixel type of the source image.</typeparam>
         /// <param name="target">The image to be modified.</param>
         /// <param name="source">The source image providing input data.</param>
-        protected abstract void Apply<TColor1, TColor2>(IImage<TColor1> target, IReadOnlyImage<TColor2> source)
+        protected abstract void Apply<TColor1, TColor2>(IImage<TColor1> target, IReadOnlyImage<TColor2> source, Rectangle targetRegion, Rectangle sourceRegion)
             where TColor1 : unmanaged, IColor<TColor1> where TColor2 : unmanaged, IColor<TColor2>;
 
         private sealed class PixelProcessorActivator<TColor1> : IReadOnlyPixelProcessor where TColor1 : unmanaged, IColor<TColor1>
         {
             private readonly IImage<TColor1> _target;
+            private readonly Rectangle _region;
             private readonly DoubleImageProcessor _context;
 
-            public PixelProcessorActivator(IImage<TColor1> targetImage, DoubleImageProcessor context)
+            public PixelProcessorActivator(IImage<TColor1> targetImage, Rectangle targetRegion, DoubleImageProcessor context)
             {
                 _target = targetImage;
+                _region = targetRegion;
                 _context = context;
             }
 
-            public void Apply<TColor>(IReadOnlyImage<TColor> image) where TColor : unmanaged, IColor<TColor>
-                => _context.Apply(_target, image);
+            public void Apply<TColor>(IReadOnlyImage<TColor> image, Rectangle region) where TColor : unmanaged, IColor<TColor>
+                => _context.Apply(_target, image, _region, region);
         }
     }
 }

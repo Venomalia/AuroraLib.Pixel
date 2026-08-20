@@ -12,16 +12,6 @@ namespace AuroraLib.Pixel.Processing.Processor
     public sealed class CopyRegionMaskProcessor : TripleImageProcessor
     {
         /// <summary>
-        /// The region of the source image to be copied.
-        /// </summary>
-        private Rectangle Region { get; set; }
-
-        /// <summary>
-        /// The target coordinates (X, Y) on the destination image where the region will be copied.
-        /// </summary>
-        public (int X, int Y) TargetCoordinate { get; set; }
-
-        /// <summary>
         /// The blend mode to be applied during the copy operation.
         /// </summary>
         public BlendModes.BlendFunction BlendMode { get; set; }
@@ -32,20 +22,15 @@ namespace AuroraLib.Pixel.Processing.Processor
         /// <param name="source">The source image from which the region will be copied.</param>
         /// <param name="mask">The mask image used to determine how blending is applied during the copy operation.</param>
         /// <param name="region">The region of the source image to be copied.</param>
-        /// <param name="targetCoordinate">The target coordinates (X, Y) on the destination image where the region will be copied.</param>
         /// <param name="mode">The blend mode to be applied during the copy operation.</param>
-        public CopyRegionMaskProcessor(IReadOnlyImage source, IReadOnlyImage mask, Rectangle region, (int X, int Y) targetCoordinate, BlendModes.BlendFunction mode) : base(source, mask)
-        {
-            Region = region;
-            TargetCoordinate = targetCoordinate;
-            BlendMode = mode;
-        }
+        public CopyRegionMaskProcessor(IReadOnlyImage source, IReadOnlyImage mask, Rectangle region, BlendModes.BlendFunction mode) : base(source, mask, region, region)
+            => BlendMode = mode;
 
         /// <inheritdoc/>
-        protected override void Apply<TColorT, TColorS, TColorM>(IImage<TColorT> target, IReadOnlyImage<TColorS> source, IReadOnlyImage<TColorM> mask)
-            => Copy(target, source, mask, Region, TargetCoordinate, BlendMode);
+        protected override void Apply<TColorT, TColorS, TColorM>(IImage<TColorT> target, IReadOnlyImage<TColorS> source, IReadOnlyImage<TColorM> mask, Rectangle targetRegion, Rectangle sourceRegion, Rectangle _)
+            => Copy(target, source, mask, sourceRegion, targetRegion.Location, BlendMode);
 
-        internal static void Copy<TColorT, TColorS, TColorM>(IImage<TColorT> targetImage, IReadOnlyImage<TColorS> sourceImage, IReadOnlyImage<TColorM> maskImage, Rectangle srcRegion, (int X, int Y) targetCoordinate, BlendModes.BlendFunction blendMode)
+        internal static void Copy<TColorT, TColorS, TColorM>(IImage<TColorT> targetImage, IReadOnlyImage<TColorS> sourceImage, IReadOnlyImage<TColorM> maskImage, Rectangle srcRegion, Point targetCoordinate, BlendModes.BlendFunction blendMode)
            where TColorT : unmanaged, IColor<TColorT>
            where TColorS : unmanaged, IColor<TColorS>
            where TColorM : unmanaged, IColor<TColorM>

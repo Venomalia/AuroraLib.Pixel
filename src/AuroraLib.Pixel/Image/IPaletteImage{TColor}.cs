@@ -1,6 +1,7 @@
 ﻿using AuroraLib.Pixel.Processing.Processor;
 using AuroraLib.Pixel.Processing.Quantizer;
 using System;
+using System.Drawing;
 
 namespace AuroraLib.Pixel.Image
 {
@@ -41,6 +42,7 @@ namespace AuroraLib.Pixel.Image
         /// The processor operates on index values, not on the resolved palette colors.
         /// </summary>
         /// <param name="processor">The processor to apply to the image.</param>
-        void ApplyToIndices(IPixelProcessor processor);
+        /// <param name="region">The area of the source image to be processed.</param>
+        void ApplyToIndices(IPixelProcessor processor, Rectangle region);
     }
 }

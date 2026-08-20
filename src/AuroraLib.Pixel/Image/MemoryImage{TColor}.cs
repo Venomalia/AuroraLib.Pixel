@@ -165,10 +165,10 @@ namespace AuroraLib.Pixel.Image
         public IImage Create(int width, int height) => new MemoryImage<TColor>(width, height, Stride);
 
         /// <inheritdoc/>
-        public void Apply(IPixelProcessor processor) => processor.Apply(this);
+        public void Apply(IPixelProcessor processor, Rectangle region) => processor.Apply(this, region);
 
         /// <inheritdoc/>
-        public void Apply(IReadOnlyPixelProcessor processor) => processor.Apply(this);
+        public void Apply(IReadOnlyPixelProcessor processor, Rectangle region) => processor.Apply(this, region);
 
         /// <inheritdoc/>
         public ReadOnlySpan<TColor> GetRow(int y) => GetWritableRow(y);

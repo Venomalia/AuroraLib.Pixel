@@ -44,7 +44,8 @@ namespace AuroraLib.Pixel.Image
         /// Applies a read-only pixel processor to the image.
         /// </summary>
         /// <param name="processor">The processor to apply.</param>
-        void Apply(IReadOnlyPixelProcessor processor);
+        /// <param name="region">The area of the source image to be processed.</param>
+        void Apply(IReadOnlyPixelProcessor processor, Rectangle region);
 
         /// <summary>
         /// Creates and returns a clone of the current image.

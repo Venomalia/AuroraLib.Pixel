@@ -300,15 +300,15 @@ namespace AuroraLib.Pixel.Image
         public IImage Create(int width, int height) => new PaletteImage<TIndex, TColor>((IImage<TIndex>)_image.Create(width, height));
 
         /// <inheritdoc/>
-        public void Apply(IPixelProcessor processor) => processor.Apply(this);
+        public void Apply(IPixelProcessor processor, Rectangle region) => processor.Apply(this, region);
 
         /// <inheritdoc/>
-        public void Apply(IReadOnlyPixelProcessor processor) => processor.Apply(this);
+        public void Apply(IReadOnlyPixelProcessor processor, Rectangle region) => processor.Apply(this, region);
 
         /// <inheritdoc/>
-        public void ApplyToIndices(IPixelProcessor processor)
+        public void ApplyToIndices(IPixelProcessor processor, Rectangle region)
         {
-            processor.Apply(_image);
+            processor.Apply(_image, region);
             CalculateColorsUsed(_image, _palette_ref);
         }
 

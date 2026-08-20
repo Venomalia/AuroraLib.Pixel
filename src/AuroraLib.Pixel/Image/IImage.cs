@@ -23,7 +23,8 @@ namespace AuroraLib.Pixel.Image
         /// Applies a pixel processor that can modify the image.
         /// </summary>
         /// <param name="processor">The processor to apply to the image.</param>
-        void Apply(IPixelProcessor processor);
+        /// <param name="region">The area of the source image to be processed.</param>
+        void Apply(IPixelProcessor processor, Rectangle region);
 
         /// <summary>
         /// Clears the entire image by setting all pixels to the default value.
