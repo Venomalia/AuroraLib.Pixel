@@ -6,10 +6,10 @@ namespace AuroraLib.Pixel.Processing.Processor
 {
     internal sealed class AnalyzerProcessor<TResult> : IReadOnlyPixelProcessor
     {
-        public Analyzer<TResult> Analyzer { get; }
+        public IAnalyzer<TResult> Analyzer { get; }
         public TResult Result { get; private set; }
 
-        public AnalyzerProcessor(Analyzer<TResult> analyzer)
+        public AnalyzerProcessor(IAnalyzer<TResult> analyzer)
             => Analyzer = analyzer;
 
         public void Apply<TColor>(IReadOnlyImage<TColor> image, Rectangle region) where TColor : unmanaged, IColor<TColor>

@@ -407,15 +407,15 @@ namespace AuroraLib.Pixel.Processing
         /// <param name="analyzer">The analyzer to use.</param>
         /// <param name="region">The region of the image to analyze.</param>
         /// <returns>The result of the analysis.</returns>
-        public static TResult Apply<TResult>(this IReadOnlyImage image, Analyzer<TResult> analyzer, Rectangle region)
+        public static TResult Apply<TResult>(this IReadOnlyImage image, IAnalyzer<TResult> analyzer, Rectangle region)
         {
             var processor = new AnalyzerProcessor<TResult>(analyzer);
             image.Apply(processor, region);
             return processor.Result;
         }
 
-        /// <inheritdoc cref="Apply{TResult}(IReadOnlyImage, Analyzer{TResult}, Rectangle)"/>
-        public static void Apply<TResult>(this IReadOnlyImage image, Analyzer<TResult> analyzer)
+        /// <inheritdoc cref="Apply{TResult}(IReadOnlyImage, IAnalyzer{TResult}, Rectangle)"/>
+        public static void Apply<TResult>(this IReadOnlyImage image, IAnalyzer<TResult> analyzer)
             => Apply(image, analyzer, image.GetBounds());
 
         /// <summary>

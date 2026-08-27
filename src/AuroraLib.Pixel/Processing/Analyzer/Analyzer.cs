@@ -11,7 +11,7 @@ namespace AuroraLib.Pixel.Processing.Analyzer
     /// Provides a base class for analyzing image pixel data and producing a result.
     /// </summary>
     /// <typeparam name="TResult">The type of result produced by the analyzer.</typeparam>
-    public abstract class Analyzer<TResult>
+    public abstract class Analyzer<TResult> : IAnalyzer<TResult>
     {
         /// <summary>
         /// Analyzes the specified image region using the default analysis state.
