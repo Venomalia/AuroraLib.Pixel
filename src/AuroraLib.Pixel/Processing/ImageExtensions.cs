@@ -239,9 +239,11 @@ namespace AuroraLib.Pixel.Processing
         /// <param name="resampler">The resampling filter used for interpolation.</param>
         /// <param name="blendMode">Optional blending operation used when writing to existing pixels.</param>
         /// <param name="intensity">Blend intensity used with the blend mode.</param>
-        public static void ResizeFrom<TColorT, TColorS>(this IImage<TColorT> target, IReadOnlyImage<TColorS> source, Rectangle srcRegion, Rectangle targetRegion, IResampler resampler, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+        public static void ResizeFrom<TColorT, TColorS>(this IImage<TColorT> target, IReadOnlyImage<TColorS> source, Rectangle srcRegion, Rectangle targetRegion, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
             where TColorT : unmanaged, IColor<TColorT> where TColorS : unmanaged, IColor<TColorS>
         {
+            resampler ??= Resamplers.Default;
+
             if (srcRegion.Width <= 0 || srcRegion.Height <= 0 || targetRegion.Width <= 0 || targetRegion.Height <= 0)
                 return;
 
@@ -272,7 +274,6 @@ namespace AuroraLib.Pixel.Processing
                 target.CopyFrom(source, srcRegion, targetRegion.Location, blendMode, intensity);
                 return;
             }
-
             // Nearest neighbor does not require precomputed kernels.
             if (resampler is NearestNeighborResampler)
             {
@@ -354,23 +355,41 @@ namespace AuroraLib.Pixel.Processing
                 }
             }
         }
+
         private static Rectangle ScaleRegion(Rectangle region, Size from, Size to)
             => new Rectangle(region.X * to.Width / from.Width, region.Y * to.Height / from.Height, region.Width * to.Width / from.Width, region.Height * to.Height / from.Height);
 
+        /// <summary>
+        /// Resizes a region of the source image to the specified size.
+        /// </summary>
+        /// <param name="source">The source image to resize.</param>
+        /// <param name="srcRegion">The region of the source image to resize.</param>
+        /// <param name="size">The size of the resulting image.</param>
+        /// <param name="resampler">The resampler used to resize the image, or <see langword="null"/> to use the default resampler.</param>
+        /// <returns>A new image containing the resized region.</returns>
+        public static IImage Resize(this IReadOnlyImage source, Rectangle srcRegion, Size size, IResampler? resampler = null)
+        {
+            IImage target = source.Create(size.Width, size.Height);
+            target.ResizeFrom(source, srcRegion, target.GetBounds(), resampler);
+            return target;
+        }
+
+        /// <inheritdoc cref="Resize(IReadOnlyImage, Rectangle, Size, IResampler?)"/>
+        public static IImage Resize(this IReadOnlyImage source, Size size, IResampler? resampler = null)
+            => Resize(source, source.GetBounds(), size, resampler);
+
         /// <inheritdoc cref="ResizeFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, IResampler, BlendModes.BlendFunction?, float)"/>
-        public static void ResizeFrom<TColorT, TColorS>(this IImage<TColorT> target, IReadOnlyImage<TColorS> source, IResampler resampler, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+        public static void ResizeFrom<TColorT, TColorS>(this IImage<TColorT> target, IReadOnlyImage<TColorS> source, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
             where TColorT : unmanaged, IColor<TColorT> where TColorS : unmanaged, IColor<TColorS>
             => target.ResizeFrom(source, source.GetBounds(), target.GetBounds(), resampler, blendMode, intensity);
 
         /// <inheritdoc cref="ResizeFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, IResampler, BlendModes.BlendFunction?, float)"/>
-        public static void ResizeFrom(this IImage target, IReadOnlyImage source, Rectangle srcRegion, Rectangle targetRegion, IResampler resampler, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+        public static void ResizeFrom(this IImage target, IReadOnlyImage source, Rectangle srcRegion, Rectangle targetRegion, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
             => target.Apply(new ResizeProcessor(source, srcRegion, resampler, blendMode, intensity), targetRegion);
 
         /// <inheritdoc cref="ResizeFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, IResampler, BlendModes.BlendFunction?, float)"/>
-        public static void ResizeFrom(this IImage target, IReadOnlyImage source, IResampler resampler, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+        public static void ResizeFrom(this IImage target, IReadOnlyImage source, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
             => target.Apply(new ResizeProcessor(source, source.GetBounds(), resampler, blendMode, intensity), target.GetBounds());
-
-
 
         /// <inheritdoc cref="IReadOnlyImage.Apply(IReadOnlyPixelProcessor, Rectangle)"/>
         public static void Apply(this IReadOnlyImage image, IReadOnlyPixelProcessor processor)

@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace AuroraLib.Pixel.Processing.Resampler
+﻿namespace AuroraLib.Pixel.Processing.Resampler
 {
     public static class Resamplers
     {
+        /// <summary>
+        /// Gets or sets the default resampler used for image resizing.
+        /// </summary>
+        public static IResampler Default { get; set; } = new LinearResampler();
+
         /// <inheritdoc cref="NearestNeighborResampler"/>
         public static readonly NearestNeighborResampler NearestNeighbor = new NearestNeighborResampler();
 

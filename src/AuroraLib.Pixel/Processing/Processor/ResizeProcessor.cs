@@ -35,9 +35,9 @@ namespace AuroraLib.Pixel.Processing.Processor
         /// <param name="resampler">The resampling filter used for interpolation.</param>
         /// <param name="blendMode">The optional blend mode to apply to the resized pixels.</param>
         /// <param name="intensity">The intensity of the blending operation.</param>
-        public ResizeProcessor(IReadOnlyImage source, Rectangle srcRegion, IResampler resampler, BlendModes.BlendFunction? blendMode = null, float intensity = 1f) : base(source, srcRegion)
+        public ResizeProcessor(IReadOnlyImage source, Rectangle srcRegion, IResampler? resampler, BlendModes.BlendFunction? blendMode = null, float intensity = 1f) : base(source, srcRegion)
         {
-            Resampler = resampler;
+            Resampler = resampler ?? Resamplers.Default;
             BlendMode = blendMode;
             Intensity = intensity;
         }
