@@ -124,7 +124,6 @@ namespace AuroraLib.Pixel.Processing
                 targetCoordinate = targetRegion.Location;
             }
 
-
             if (target is FlatTexture<TColorT> targets && targets.LevelCount <= 1)
             {
                 Size targetSize = targets.GetBounds().Size;
@@ -189,6 +188,17 @@ namespace AuroraLib.Pixel.Processing
         {
             if (mirroring == MirrorAxis.None || region.Width == 0 || region.Height == 0)
                 return;
+
+            if (image is Texture<TColor> tex && tex.LevelCount <= 1)
+            {
+                Size targetSize = tex.GetBounds().Size;
+                for (int i = 1; i < tex.LevelCount; i++)
+                {
+                    IImage<TColor> subTarget = tex.GetLevel(i);
+                    Rectangle subTargetRegion = ScaleRegion(region, targetSize, subTarget.GetBounds().Size);
+                    Mirror(subTarget, mirroring, subTargetRegion);
+                }
+            }
 
             if (!image.GetBounds().Contains(region))
                 throw new ArgumentOutOfRangeException(nameof(region), "Region exceeds image bounds.");
