@@ -425,7 +425,7 @@ namespace AuroraLib.Pixel.Processing
         }
 
         /// <inheritdoc cref="Apply{TResult}(IReadOnlyImage, IAnalyzer{TResult}, Rectangle)"/>
-        public static void Apply<TResult>(this IReadOnlyImage image, IAnalyzer<TResult> analyzer)
+        public static TResult Apply<TResult>(this IReadOnlyImage image, IAnalyzer<TResult> analyzer)
             => Apply(image, analyzer, image.GetBounds());
 
         /// <summary>
