@@ -18,6 +18,7 @@ namespace AuroraLib.Pixel.Image
     /// </summary>
     /// <typeparam name="TIndex">The underlying type used to store palette indices in the image.</typeparam>
     /// <typeparam name="TColor">The actual color type used in the palette.</typeparam>
+    [DebuggerDisplay("{Width}x{Height}, Palette = {Palette.Span.Length}")]
     public sealed class PaletteImage<TIndex, TColor> : IPaletteImage<TColor>
         where TIndex : unmanaged, IIndexColor, IColor<TIndex>
         where TColor : unmanaged, IColor<TColor>

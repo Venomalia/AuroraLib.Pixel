@@ -1,6 +1,7 @@
 ﻿using AuroraLib.Pixel.Image;
 using AuroraLib.Pixel.Metadata;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 
@@ -9,6 +10,7 @@ namespace AuroraLib.Pixel.Texture
     /// <summary>
     /// Represents a 3D volume texture composed of multiple depth slices.
     /// </summary>
+    [DebuggerDisplay("{Width}x{Height}, Depths = {LevelCount}, Mips = {MipMapCount}")]
     public sealed class VolumeTexture<TColor> : Texture<TColor> where TColor : unmanaged, IColor<TColor>
     {
         /// <summary>

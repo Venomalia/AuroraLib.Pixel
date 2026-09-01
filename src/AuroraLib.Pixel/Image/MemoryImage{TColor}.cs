@@ -3,6 +3,7 @@ using AuroraLib.Pixel.Processing;
 using AuroraLib.Pixel.Processing.Processor;
 using System;
 using System.Buffers;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Numerics;
@@ -14,6 +15,7 @@ namespace AuroraLib.Pixel.Image
     /// Represents an image , providing span-based access to pixel data.
     /// </summary>
     /// <typeparam name="TColor">The pixel color type implementing <see cref="IColor{TColor}"/>.</typeparam>
+    [DebuggerDisplay("{Width}x{Height}")]
     public sealed class MemoryImage<TColor> : IDirectRowAccess<TColor>
         where TColor : unmanaged, IColor<TColor>
     {

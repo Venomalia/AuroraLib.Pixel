@@ -5,6 +5,7 @@ using AuroraLib.Pixel.Processing.Processor;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Numerics;
 
@@ -14,6 +15,7 @@ namespace AuroraLib.Pixel.Texture
     /// Represents a multi-level texture containing one or more image levels, such as mipmaps, animation frames, or layers.
     /// </summary>
     /// <typeparam name="TColor">The pixel color type.</typeparam>
+    [DebuggerDisplay("{Width}x{Height}, Mips = {MipMapCount}")]
     public abstract class Texture<TColor> : IImage<TColor>, IEnumerable<IImage<TColor>>, IEnumerable<IImage> where TColor : unmanaged, IColor<TColor>
     {
         /// <summary>

@@ -4,6 +4,7 @@ using AuroraLib.Pixel.Processing;
 using AuroraLib.Pixel.Processing.Processor;
 using System;
 using System.Buffers;
+using System.Diagnostics;
 using System.Drawing;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -15,6 +16,7 @@ namespace AuroraLib.Pixel.Image
     /// Supports decoding/encoding via a block processor.
     /// </summary>
     /// <typeparam name="TColor">The color type of the image.</typeparam>
+    [DebuggerDisplay("{Width}x{Height}, BlockFormat = {BlockFormat.GetType().Name}")]
     public sealed class BlockImage<TColor> : IDirectRowAccess<TColor>, IBlockImage
         where TColor : unmanaged, IColor<TColor>
     {
