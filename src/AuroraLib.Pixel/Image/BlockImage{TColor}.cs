@@ -43,7 +43,10 @@ namespace AuroraLib.Pixel.Image
             get
             {
                 if (_isDirty)
+                {
                     EncodeBlockLine();
+                    _currentBlockLine = -1;
+                }
                 return _blockMemory.Span;
             }
         }
