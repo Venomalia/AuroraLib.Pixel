@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Buffers.Binary;
+using System.Drawing;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
@@ -120,6 +120,9 @@ namespace AuroraLib.Pixel.PixelFormats
 
         public static bool operator ==(RGBA<TValue> left, RGBA<TValue> right) => left.Equals(right);
         public static bool operator !=(RGBA<TValue> left, RGBA<TValue> right) => !(left == right);
+
+        public static implicit operator Color(RGBA<TValue> pixel) => (BGRA<TValue>)pixel;
+        public static implicit operator RGBA<TValue>(Color value) => (BGRA<TValue>)value;
 
         public static implicit operator uint(RGBA<TValue> pixel)
         {

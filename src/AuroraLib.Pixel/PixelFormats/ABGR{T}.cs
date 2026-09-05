@@ -1,8 +1,6 @@
 ﻿using AuroraLib.Pixel.Processing;
 using System;
-using System.Buffers.Binary;
 using System.Drawing;
-using System.Globalization;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
@@ -134,6 +132,9 @@ namespace AuroraLib.Pixel.PixelFormats
 
         public static implicit operator ARGB<TValue>(ABGR<TValue> v) => new ARGB<TValue>(v.R, v.G, v.B, v.A);
         public static implicit operator ABGR<TValue>(ARGB<TValue> v) => new ABGR<TValue>(v.B, v.G, v.R, v.A);
+
+        public static implicit operator Color(ABGR<TValue> pixel) => (BGRA<TValue>)pixel;
+        public static implicit operator ABGR<TValue>(Color value) => (BGRA<TValue>)value;
 
         public static implicit operator uint(ABGR<TValue> pixel)
         {
