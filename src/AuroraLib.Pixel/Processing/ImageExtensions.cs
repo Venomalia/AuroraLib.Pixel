@@ -106,23 +106,14 @@ namespace AuroraLib.Pixel.Processing
             where TColorT : unmanaged, IColor<TColorT>
             where TColorS : unmanaged, IColor<TColorS>
         {
-            if (srcRegion.Width == 0 || srcRegion.Height == 0 || target.Width == 0 || target.Height == 0)
-                return;
-
             if (!source.GetBounds().Contains(srcRegion))
-                throw new ArgumentOutOfRangeException(nameof(source), "Region exceeds source image bounds.");
 
             Rectangle targetRegion = new Rectangle(targetCoordinate, srcRegion.Size);
-            Rectangle clippedTarget = Rectangle.Intersect(targetRegion, target.GetBounds());
+            ClipRegions(target.GetBounds(), ref srcRegion, ref targetRegion);
+            targetCoordinate = targetRegion.Location;
 
-            if (targetRegion.IsEmpty)
+            if (srcRegion.Width == 0 || srcRegion.Height == 0)
                 return;
-
-            if (clippedTarget != targetRegion)
-            {
-                srcRegion = new Rectangle(srcRegion.X + targetRegion.X - targetRegion.X, srcRegion.Y + targetRegion.Y - targetRegion.Y, targetRegion.Width, targetRegion.Height);
-                targetCoordinate = targetRegion.Location;
-            }
 
             if (target is FlatTexture<TColorT> targets && targets.LevelCount <= 1)
             {
@@ -155,6 +146,22 @@ namespace AuroraLib.Pixel.Processing
             }
         }
 
+        private static void ClipRegions(Rectangle targetBounds, ref Rectangle srcRegion, ref Rectangle targetRegion)
+        {
+            Rectangle clipped = Rectangle.Intersect(targetRegion, targetBounds);
+
+            if (clipped != targetRegion)
+            {
+                srcRegion = new Rectangle(
+                    srcRegion.X + clipped.X - targetRegion.X,
+                    srcRegion.Y + clipped.Y - targetRegion.Y,
+                    clipped.Width,
+                    clipped.Height);
+
+                targetRegion = clipped;
+            }
+        }
+
         /// <inheritdoc cref="CopyFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Point, BlendModes.BlendFunction?, float)"/>
         public static void CopyFrom<TColorT, TColorS>(this IImage<TColorT> target, IReadOnlyImage<TColorS> source, Point targetCoordinate, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
             where TColorT : unmanaged, IColor<TColorT> where TColorS : unmanaged, IColor<TColorS>
@@ -167,11 +174,11 @@ namespace AuroraLib.Pixel.Processing
 
         /// <inheritdoc cref="CopyFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Point, BlendModes.BlendFunction?, float)"/>
         public static void CopyFrom(this IImage target, IReadOnlyImage source, Rectangle srcRegion, Point targetCoordinate, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
-            => target.Apply(new CopyRegionProcessor(source, srcRegion, blendMode, intensity), new Rectangle(targetCoordinate, new Size(target.Width, target.Height)));
+            => target.Apply(new CopyRegionProcessor(source, srcRegion, blendMode, intensity), new Rectangle(targetCoordinate, new Size(source.Width, source.Height)));
 
         /// <inheritdoc cref="CopyFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Point, BlendModes.BlendFunction?, float)"/>
         public static void CopyFrom(this IImage target, IReadOnlyImage source, Point targetCoordinate, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
-            => target.Apply(new CopyRegionProcessor(source, source.GetBounds(), blendMode, intensity), new Rectangle(targetCoordinate, new Size(target.Width, target.Height)));
+            => target.Apply(new CopyRegionProcessor(source, source.GetBounds(), blendMode, intensity), new Rectangle(targetCoordinate, new Size(source.Width, source.Height)));
 
         /// <inheritdoc cref="CopyFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Point, BlendModes.BlendFunction?, float)"/>
         public static void CopyFrom(this IImage target, IReadOnlyImage source, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
