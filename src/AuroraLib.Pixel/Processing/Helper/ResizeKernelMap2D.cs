@@ -97,9 +97,9 @@ namespace AuroraLib.Pixel.Processing.Helper
         private static void BuildKernel(Span<Kernel> kernels, float[] weights, int index, int sourceSize, double ratio, double scale, int radius, IResampler resampler, ref int weightOffset)
         {
             double center = ((index + 0.5) * ratio) - 0.5;
-
-            int start = Math.Max(0, (int)Math.Ceiling(center - radius));
-            int end = Math.Min(sourceSize - 1, (int)Math.Floor(center + radius));
+            double filterRadius = resampler.Radius * scale;
+            int start = Math.Max(0, (int)Math.Ceiling(center - filterRadius));
+            int end = Math.Min(sourceSize - 1, (int)Math.Floor(center + filterRadius));
 
             int length = end - start + 1;
 

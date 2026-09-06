@@ -261,17 +261,12 @@ namespace AuroraLib.Pixel.Processing
         {
             resampler ??= Resamplers.Default;
 
-            if (srcRegion.Width <= 0 || srcRegion.Height <= 0 || targetRegion.Width <= 0 || targetRegion.Height <= 0)
-                return;
-
-            // Source regions are validated.
             if (!source.GetBounds().Contains(srcRegion))
-                throw new ArgumentOutOfRangeException(nameof(source), "Region exceeds source image bounds.");
+                throw new ArgumentOutOfRangeException(nameof(srcRegion), "Region exceeds source image bounds.");
 
-            // Clip the target region to the image bounds.
-            targetRegion = Rectangle.Intersect(targetRegion, target.GetBounds());
+            ClipResizeRegions(target.GetBounds(), ref srcRegion, ref targetRegion);
 
-            if (targetRegion.IsEmpty)
+            if (srcRegion.Width == 0 || srcRegion.Height == 0 || targetRegion.Width == 0 || targetRegion.Height == 0)
                 return;
 
             if (target is FlatTexture<TColorT> targets && targets.LevelCount <= 1)
@@ -307,9 +302,9 @@ namespace AuroraLib.Pixel.Processing
                     int sourceY = srcRegion.Y + (int)((y - targetRegion.Y) * scaleY);
                     ReadOnlySpan<TColorS> sourceRow = sourcePixel[sourceY];
 
-                    for (int x = targetRegion.Left; x < targetRegion.Right; x++)
+                    for (int x = 0; x < targetRegion.Width; x++)
                     {
-                        int sourceX = (int)((x - targetRegion.X) * scaleX);
+                        int sourceX = (int)(x * scaleX);
 
                         if (blendMode is null)
                             targetRow[x].From(sourceRow[sourceX]);
@@ -338,9 +333,9 @@ namespace AuroraLib.Pixel.Processing
                     Kernel kernelY = kernelMap.Y.Kernels[y - targetRegion.Y];
                     ReadOnlySpan<float> weightsY = kernelMap.Y.Weights.AsSpan(kernelY.WeightOffset, kernelY.Length);
 
-                    for (int x = targetRegion.Left; x < targetRegion.Right; x++)
+                    for (int x = 0; x < targetRegion.Width; x++)
                     {
-                        Kernel kernelX = kernelMap.X.Kernels[x - targetRegion.X];
+                        Kernel kernelX = kernelMap.X.Kernels[x];
                         ReadOnlySpan<float> weightsX = kernelMap.X.Weights.AsSpan(kernelX.WeightOffset, kernelX.Length);
 
                         Vector4 result = Vector4.Zero;
@@ -373,8 +368,46 @@ namespace AuroraLib.Pixel.Processing
             }
         }
 
+        private static void ClipResizeRegions(Rectangle targetBounds, ref Rectangle srcRegion, ref Rectangle targetRegion)
+        {
+            Rectangle clipped = Rectangle.Intersect(targetRegion, targetBounds);
+
+            if (clipped != targetRegion)
+            {
+                float scaleX = srcRegion.Width / (float)targetRegion.Width;
+                float scaleY = srcRegion.Height / (float)targetRegion.Height;
+
+                int offsetX = (int)((clipped.X - targetRegion.X) * scaleX);
+                int offsetY = (int)((clipped.Y - targetRegion.Y) * scaleY);
+
+                int width = (int)(clipped.Width * scaleX);
+                int height = (int)(clipped.Height * scaleY);
+
+                srcRegion = new Rectangle(srcRegion.X + offsetX, srcRegion.Y + offsetY, width, height);
+                targetRegion = clipped;
+            }
+        }
+
         private static Rectangle ScaleRegion(Rectangle region, Size from, Size to)
             => new Rectangle(region.X * to.Width / from.Width, region.Y * to.Height / from.Height, region.Width * to.Width / from.Width, region.Height * to.Height / from.Height);
+
+        /// <inheritdoc cref="ResizeFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, IResampler, BlendModes.BlendFunction?, float)"/>
+        public static void ResizeFrom<TColorT, TColorS>(this IImage<TColorT> target, IReadOnlyImage<TColorS> source, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+            where TColorT : unmanaged, IColor<TColorT> where TColorS : unmanaged, IColor<TColorS>
+            => target.ResizeFrom(source, source.GetBounds(), target.GetBounds(), resampler, blendMode, intensity);
+
+        /// <inheritdoc cref="ResizeFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, IResampler, BlendModes.BlendFunction?, float)"/>
+        public static void ResizeFrom(this IImage target, IReadOnlyImage source, Rectangle srcRegion, Rectangle targetRegion, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+            => target.Apply(new ResizeProcessor(source, srcRegion, resampler, blendMode, intensity), targetRegion);
+
+
+        /// <inheritdoc cref="ResizeFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, IResampler, BlendModes.BlendFunction?, float)"/>
+        public static void ResizeFrom(this IImage target, IReadOnlyImage source, Rectangle targetRegion, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+            => target.Apply(new ResizeProcessor(source, source.GetBounds(), resampler, blendMode, intensity), targetRegion);
+
+        /// <inheritdoc cref="ResizeFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, IResampler, BlendModes.BlendFunction?, float)"/>
+        public static void ResizeFrom(this IImage target, IReadOnlyImage source, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+            => target.Apply(new ResizeProcessor(source, source.GetBounds(), resampler, blendMode, intensity), target.GetBounds());
 
         /// <summary>
         /// Resizes a region of the source image to the specified size.
@@ -395,18 +428,6 @@ namespace AuroraLib.Pixel.Processing
         public static IImage Resize(this IReadOnlyImage source, Size size, IResampler? resampler = null)
             => Resize(source, source.GetBounds(), size, resampler);
 
-        /// <inheritdoc cref="ResizeFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, IResampler, BlendModes.BlendFunction?, float)"/>
-        public static void ResizeFrom<TColorT, TColorS>(this IImage<TColorT> target, IReadOnlyImage<TColorS> source, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
-            where TColorT : unmanaged, IColor<TColorT> where TColorS : unmanaged, IColor<TColorS>
-            => target.ResizeFrom(source, source.GetBounds(), target.GetBounds(), resampler, blendMode, intensity);
-
-        /// <inheritdoc cref="ResizeFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, IResampler, BlendModes.BlendFunction?, float)"/>
-        public static void ResizeFrom(this IImage target, IReadOnlyImage source, Rectangle srcRegion, Rectangle targetRegion, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
-            => target.Apply(new ResizeProcessor(source, srcRegion, resampler, blendMode, intensity), targetRegion);
-
-        /// <inheritdoc cref="ResizeFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, IResampler, BlendModes.BlendFunction?, float)"/>
-        public static void ResizeFrom(this IImage target, IReadOnlyImage source, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
-            => target.Apply(new ResizeProcessor(source, source.GetBounds(), resampler, blendMode, intensity), target.GetBounds());
 
         /// <inheritdoc cref="IReadOnlyImage.Apply(IReadOnlyPixelProcessor, Rectangle)"/>
         public static void Apply(this IReadOnlyImage image, IReadOnlyPixelProcessor processor)
