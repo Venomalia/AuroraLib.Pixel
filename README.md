@@ -8,6 +8,31 @@ The library supports an broad range of raw, indexed (palettized), block-compress
 Core library.
 [![NuGet Package](https://img.shields.io/nuget/v/AuroraLib.Pixel.svg?style=flat-square&label=NuGet%20Package)](https://www.nuget.org/packages/AuroraLib.Pixel)
 
+#### Example
+Create an RGBA32 image.
+``` csharp
+   using var image = new MemoryImage<RGBA<byte>>(512, 256);
+```
+
+Create an palette-based image using RGBA32 colors.
+``` csharp
+   using var image = new PaletteImage<I<byte>, RGBA<byte>>(512, 256);
+```
+
+Create an block-compressed image using the BC1 compression format.
+``` csharp
+   using var image = new BlockImage<RGBA<byte>>(new BC1Block<RGBA<byte>>(), 512, 256);   
+```
+
+Most color types are built from generic channel types that determine the precision and numeric representation of each channel.
+For example, `RGBA<T>` can be represented using different component types:
+```csharp
+RGBA<byte> RGBA32U;  // 8-bit unsigned channels.
+RGBA<ushort> RGBA64U; // 16-bit unsigned channels.
+RGBA<sbyte> RGBA32S;  // 8-bit signed channels.
+RGBA<float> RGBA128F;  // 32-bit floating-point channels.
+```
+   
 ### AuroraLib.Pixel.BitmapExtension
 Provides integration for System.Drawing.Bitmap.
 [![NuGet Package BitmapExtension](https://img.shields.io/nuget/v/AuroraLib.Pixel.BitmapExtension.svg?style=flat-square&label=NuGet%20Package)](https://www.nuget.org/packages/AuroraLib.Pixel.BitmapExtension)
