@@ -102,11 +102,12 @@ namespace AuroraLib.Pixel.Processing
         /// <param name="targetCoordinate">The coordinates (X, Y) in the target image where the region will be copied to.</param>
         /// <param name="blendMode">An optional blend mode to apply while copying the region. If <c>null</c>, no blending is performed.</param>
         /// <param name="intensity">The intensity of the blending (from 0 to 1).</param>
-        public static void CopyFrom<TColorT, TColorS>(this IImage<TColorT> target, IReadOnlyImage<TColorS> source, Rectangle srcRegion, Point targetCoordinate, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+        public static void CopyFrom<TColorT, TColorS>(this IImage<TColorT> target, IReadOnlyImage<TColorS> source, Rectangle srcRegion, Point targetCoordinate = default, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
             where TColorT : unmanaged, IColor<TColorT>
             where TColorS : unmanaged, IColor<TColorS>
         {
             if (!source.GetBounds().Contains(srcRegion))
+                throw new ArgumentOutOfRangeException(nameof(srcRegion), "Region exceeds source image bounds.");
 
             Rectangle targetRegion = new Rectangle(targetCoordinate, srcRegion.Size);
             ClipRegions(target.GetBounds(), ref srcRegion, ref targetRegion);
@@ -124,6 +125,14 @@ namespace AuroraLib.Pixel.Processing
                     Rectangle subTargetRegion = ScaleRegion(targetRegion, targetSize, subTarget.GetBounds().Size);
                     ResizeFrom(subTarget, source, srcRegion, subTargetRegion, new BoxResampler(), blendMode, intensity);
                 }
+            }
+
+            if (ReferenceEquals(source, target) && srcRegion.IntersectsWith(targetRegion) && srcRegion.X >= targetCoordinate.X)
+            {
+                using var buffer = new MemoryImage<TColorT>(srcRegion.Width, srcRegion.Height);
+                buffer.CopyFrom(source, srcRegion);
+                CopyFrom(target, buffer, targetRegion, targetCoordinate, blendMode, intensity);
+                return;
             }
 
             RowAccessor<TColorT> targetPixel = new RowAccessor<TColorT>(target, targetCoordinate.X, srcRegion.Width);
@@ -196,6 +205,9 @@ namespace AuroraLib.Pixel.Processing
             if (mirroring == MirrorAxis.None || region.Width == 0 || region.Height == 0)
                 return;
 
+            if (!image.GetBounds().Contains(region))
+                throw new ArgumentOutOfRangeException(nameof(region), "Region exceeds image bounds.");
+
             if (image is Texture<TColor> tex && tex.LevelCount <= 1)
             {
                 Size targetSize = tex.GetBounds().Size;
@@ -206,9 +218,6 @@ namespace AuroraLib.Pixel.Processing
                     Mirror(subTarget, mirroring, subTargetRegion);
                 }
             }
-
-            if (!image.GetBounds().Contains(region))
-                throw new ArgumentOutOfRangeException(nameof(region), "Region exceeds image bounds.");
 
             RowAccessor<TColor> topRow = new RowAccessor<TColor>(image, region.X, region.Width);
 
@@ -286,6 +295,15 @@ namespace AuroraLib.Pixel.Processing
                 target.CopyFrom(source, srcRegion, targetRegion.Location, blendMode, intensity);
                 return;
             }
+
+            if (ReferenceEquals(source, target) && srcRegion.IntersectsWith(targetRegion))
+            {
+                using var buffer = new MemoryImage<TColorT>(srcRegion.Width, srcRegion.Height);
+                buffer.CopyFrom(source, srcRegion);
+                ResizeFrom(target, buffer, targetRegion, resampler, blendMode, intensity);
+                return;
+            }
+
             // Nearest neighbor does not require precomputed kernels.
             if (resampler is NearestNeighborResampler)
             {
@@ -399,7 +417,6 @@ namespace AuroraLib.Pixel.Processing
         /// <inheritdoc cref="ResizeFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, IResampler, BlendModes.BlendFunction?, float)"/>
         public static void ResizeFrom(this IImage target, IReadOnlyImage source, Rectangle srcRegion, Rectangle targetRegion, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
             => target.Apply(new ResizeProcessor(source, srcRegion, resampler, blendMode, intensity), targetRegion);
-
 
         /// <inheritdoc cref="ResizeFrom{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, IResampler, BlendModes.BlendFunction?, float)"/>
         public static void ResizeFrom(this IImage target, IReadOnlyImage source, Rectangle targetRegion, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
@@ -524,5 +541,160 @@ namespace AuroraLib.Pixel.Processing
         public static void Apply<TColor>(this IImage<TColor> image, PixelProcessor<TColor> operation) where TColor : unmanaged, IColor<TColor>
             => Apply(image, operation, image.GetBounds());
 
+        /// <summary>
+        /// Applies a 2D affine transformation to a region of a source image and draws the result into a target region.
+        /// </summary>
+        /// <typeparam name="TColorT">The target image color type.</typeparam>
+        /// <typeparam name="TColorS">The source image color type.</typeparam>
+        /// <param name="target">The image to draw the transformed region into.</param>
+        /// <param name="source">The image containing the source region.</param>
+        /// <param name="srcRegion">The region of the source image to transform.</param>
+        /// <param name="targetRegion">The region of the target image to draw into.</param>
+        /// <param name="transform">The affine transformation matrix mapping source coordinates to target coordinates.</param>
+        /// <param name="resampler">The resampler used to interpolate source pixels.</param>
+        /// <param name="blendMode">The blend mode used to combine the transformed pixels with the target.</param>
+        /// <param name="intensity">The intensity of the blend operation.</param>
+        public static void Transform<TColorT, TColorS>(this IImage<TColorT> target, IReadOnlyImage<TColorS> source, Rectangle srcRegion, Rectangle targetRegion, Matrix3x2 transform, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f) where TColorT : unmanaged, IColor<TColorT> where TColorS : unmanaged, IColor<TColorS>
+        {
+            resampler ??= Resamplers.Default;
+
+            if (!source.GetBounds().Contains(srcRegion))
+                throw new ArgumentOutOfRangeException(nameof(srcRegion), "Region exceeds source image bounds.");
+
+            targetRegion = Rectangle.Intersect(targetRegion, target.GetBounds());
+
+            if (srcRegion.Width == 0 || srcRegion.Height == 0 || targetRegion.Width == 0 || targetRegion.Height == 0)
+                return;
+
+            if (!Matrix3x2.Invert(transform, out Matrix3x2 inverse))
+                return;
+
+            if (transform.IsIdentity)
+            {
+                var size = new Size(Math.Min(targetRegion.Width, srcRegion.Width), Math.Min(targetRegion.Height, srcRegion.Height));
+                target.CopyFrom(source, new Rectangle(srcRegion.Location, size), targetRegion.Location, blendMode, intensity);
+                return;
+            }
+
+            if (ReferenceEquals(source, target) && srcRegion.IntersectsWith(targetRegion))
+            {
+                using var buffer = new MemoryImage<TColorT>(srcRegion.Width, srcRegion.Height);
+                buffer.CopyFrom(source, srcRegion);
+                Transform(target, buffer, targetRegion, transform, resampler, blendMode, intensity);
+                return;
+            }
+
+            RowAccessor<TColorT> targetPixel = new RowAccessor<TColorT>(target, targetRegion.X, targetRegion.Width);
+            if (resampler is NearestNeighborResampler)
+            {
+                for (int y = targetRegion.Top; y < targetRegion.Bottom; y++)
+                {
+                    Span<TColorT> targetRow = targetPixel[y];
+
+                    for (int x = targetRegion.Left; x < targetRegion.Right; x++)
+                    {
+                        Vector2 targetPos = new Vector2(x + 0.5f, y + 0.5f);
+                        Vector2 sourcePos = Vector2.Transform(targetPos, inverse);
+                        sourcePos -= new Vector2(0.5f);
+
+                        int sourceX = (int)Math.Floor(sourcePos.X + 0.5f);
+                        int sourceY = (int)Math.Floor(sourcePos.Y + 0.5f);
+
+                        if ((uint)(sourceX - srcRegion.X) >= (uint)srcRegion.Width || (uint)(sourceY - srcRegion.Y) >= (uint)srcRegion.Height)
+                            continue;
+
+                        TColorS sourceColor = source[sourceX, sourceY];
+
+                        if (blendMode is null)
+                            targetRow[x - targetRegion.X].From(sourceColor);
+                        else
+                            targetRow[x - targetRegion.X].Blend(sourceColor, blendMode, intensity);
+                    }
+
+                    if (targetPixel.IsBuffered)
+                        targetPixel[y] = targetRow;
+                }
+            }
+            else
+            {
+                float radius = resampler.Radius;
+                ReadOnlyRowAccessor<TColorS> sourcePixel = new ReadOnlyRowAccessor<TColorS>(source, srcRegion.X, srcRegion.Width);
+                for (int y = targetRegion.Top; y < targetRegion.Bottom; y++)
+                {
+                    Span<TColorT> targetRow = targetPixel[y];
+
+                    for (int x = targetRegion.Left; x < targetRegion.Right; x++)
+                    {
+                        // Target pixel center.
+                        Vector2 targetPos = new Vector2(x + 0.5f, y + 0.5f);
+
+                        // Find where this target pixel came from in the source.
+                        Vector2 sourcePos = Vector2.Transform(targetPos, inverse);
+
+                        // Convert back to source pixel-center coordinates.
+                        sourcePos -= new Vector2(0.5f);
+                        int startX = Math.Max(srcRegion.X, (int)Math.Ceiling(sourcePos.X - radius));
+                        int endX = Math.Min(srcRegion.Right - 1, (int)Math.Floor(sourcePos.X + radius));
+
+                        int startY = Math.Max(srcRegion.Y, (int)Math.Ceiling(sourcePos.Y - radius));
+                        int endY = Math.Min(srcRegion.Bottom - 1, (int)Math.Floor(sourcePos.Y + radius));
+
+                        Vector4 result = Vector4.Zero;
+                        float weightSum = 0;
+
+                        for (int sy = startY; sy <= endY; sy++)
+                        {
+                            float weightY = resampler.GetWeight(sy - sourcePos.Y);
+                            ReadOnlySpan<TColorS> sourceRow = sourcePixel[sy];
+
+                            for (int sx = startX; sx <= endX; sx++)
+                            {
+                                float weight = resampler.GetWeight(sx - sourcePos.X) * weightY;
+
+                                result += sourceRow[sx].ToScaledVector4() * weight;
+                                weightSum += weight;
+                            }
+                        }
+
+                        if (weightSum <= 0)
+                            continue;
+
+                        result /= weightSum;
+
+                        result = Vector4.Clamp(result, Vector4.Zero, Vector4.One);
+
+                        if (blendMode is null)
+                            targetRow[x - targetRegion.X].FromScaledVector4(result);
+                        else
+                            targetRow[x - targetRegion.X].FromScaledVector4(blendMode(targetRow[x - targetRegion.X].ToScaledVector4(), result, intensity));
+                    }
+
+                    if (targetPixel.IsBuffered)
+                        targetPixel[y] = targetRow;
+                }
+            }
+        }
+
+        /// <inheritdoc cref="Transform{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, Matrix3x2, IResampler?, BlendModes.BlendFunction?, float)"/>
+        public static void Transform<TColorT, TColorS>(this IImage<TColorT> target, IReadOnlyImage<TColorS> source, Rectangle targetRegion, Matrix3x2 transform, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+            where TColorT : unmanaged, IColor<TColorT> where TColorS : unmanaged, IColor<TColorS>
+            => target.Transform(source, source.GetBounds(), targetRegion, transform, resampler, blendMode, intensity);
+
+        /// <inheritdoc cref="Transform{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, Matrix3x2, IResampler?, BlendModes.BlendFunction?, float)"/>
+        public static void Transform<TColorT, TColorS>(this IImage<TColorT> target, IReadOnlyImage<TColorS> source, Matrix3x2 transform, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+            where TColorT : unmanaged, IColor<TColorT> where TColorS : unmanaged, IColor<TColorS>
+            => target.Transform(source, source.GetBounds(), target.GetBounds(), transform, resampler, blendMode, intensity);
+
+        /// <inheritdoc cref="Transform{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, Matrix3x2, IResampler?, BlendModes.BlendFunction?, float)"/>
+        public static void Transform(this IImage target, IReadOnlyImage source, Rectangle srcRegion, Rectangle targetRegion, Matrix3x2 transform, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+            => target.Apply(new TransformationProcessor(source, srcRegion, transform, resampler, blendMode, intensity), targetRegion);
+
+        /// <inheritdoc cref="Transform{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, Matrix3x2, IResampler?, BlendModes.BlendFunction?, float)"/>
+        public static void Transform(this IImage target, IReadOnlyImage source, Rectangle targetRegion, Matrix3x2 transform, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+            => target.Apply(new TransformationProcessor(source, source.GetBounds(), transform, resampler, blendMode, intensity), targetRegion);
+
+        /// <inheritdoc cref="Transform{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, Matrix3x2, IResampler?, BlendModes.BlendFunction?, float)"/>
+        public static void Transform(this IImage target, IReadOnlyImage source, Matrix3x2 transform, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+            => target.Apply(new TransformationProcessor(source, source.GetBounds(), transform, resampler, blendMode, intensity), target.GetBounds());
     }
 }
