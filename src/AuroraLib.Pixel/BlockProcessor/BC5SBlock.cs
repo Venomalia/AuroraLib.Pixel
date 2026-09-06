@@ -1,4 +1,5 @@
-﻿using AuroraLib.Pixel.Processing.Helper;
+﻿using AuroraLib.Pixel.PixelFormats;
+using AuroraLib.Pixel.Processing.Helper;
 using System;
 using System.Runtime.InteropServices;
 
@@ -8,7 +9,7 @@ namespace AuroraLib.Pixel.BlockProcessor
     /// Represents a BC5 signed (ATI2/3Dc) compressed texture block processor. stores two independent single-channel values.
     /// Each 4x4 block is 16 bytes in size, composed of two 8-byte BC4 blocks.
     /// </summary>
-    public sealed class BC5SBlock<TColor> : IBlockProcessor<TColor> where TColor : unmanaged, IColor<TColor>, IIntensity<sbyte>, IAlpha<sbyte>
+    public sealed class BC5SBlock : IBlockProcessor<IA<sbyte>>
     {
         private const int BPB = 8 * 2;
 
@@ -21,21 +22,21 @@ namespace AuroraLib.Pixel.BlockProcessor
         /// <inheritdoc/>
         public int BytesPerBlock => BPB;
 
-        private readonly BC4SBlock<TColor> BC4 = new BC4SBlock<TColor>();
-        private readonly BC4SBlock<AToI<TColor, sbyte>> BC4a = new BC4SBlock<AToI<TColor, sbyte>>();
+        private readonly BC4SBlock<IA<sbyte>> BC4 = new BC4SBlock<IA<sbyte>>();
+        private readonly BC4SBlock<AToI<IA<sbyte>, sbyte>> BC4a = new BC4SBlock<AToI<IA<sbyte>, sbyte>>();
 
         /// <inheritdoc/>
-        public void DecodeBlock(ReadOnlySpan<byte> source, Span<TColor> target, int stride)
+        public void DecodeBlock(ReadOnlySpan<byte> source, Span<IA<sbyte>> target, int stride)
         {
             BC4.DecodeBlock(source.Slice(8), target, stride);
-            Span<AToI<TColor, sbyte>> intensity = MemoryMarshal.Cast<TColor, AToI<TColor, sbyte>>(target);
+            Span<AToI<IA<sbyte>, sbyte>> intensity = MemoryMarshal.Cast<IA<sbyte>, AToI<IA<sbyte>, sbyte>>(target);
             BC4a.DecodeBlock(source.Slice(0, 8), intensity, stride);
         }
 
-        public void EncodeBlock(ReadOnlySpan<TColor> source, Span<byte> target, int stride)
+        public void EncodeBlock(ReadOnlySpan<IA<sbyte>> source, Span<byte> target, int stride)
         {
             BC4.EncodeBlock(source, target.Slice(8), stride);
-            ReadOnlySpan<AToI<TColor, sbyte>> intensity = MemoryMarshal.Cast<TColor, AToI<TColor, sbyte>>(source);
+            ReadOnlySpan<AToI<IA<sbyte>, sbyte>> intensity = MemoryMarshal.Cast<IA<sbyte>, AToI<IA<sbyte>, sbyte>>(source);
             BC4a.EncodeBlock(intensity, target.Slice(0, 8), stride);
         }
     }
