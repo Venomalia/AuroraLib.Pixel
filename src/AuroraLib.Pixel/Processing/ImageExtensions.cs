@@ -561,6 +561,14 @@ namespace AuroraLib.Pixel.Processing
             if (!source.GetBounds().Contains(srcRegion))
                 throw new ArgumentOutOfRangeException(nameof(srcRegion), "Region exceeds source image bounds.");
 
+            if (transform.IsIdentity)
+            {
+                var size = new Size(Math.Min(targetRegion.Width, srcRegion.Width), Math.Min(targetRegion.Height, srcRegion.Height));
+                target.CopyFrom(source, new Rectangle(srcRegion.Location, size), targetRegion.Location, blendMode, intensity);
+                return;
+            }
+
+            targetRegion = Rectangle.Intersect(targetRegion, TransformBounds(srcRegion, transform));
             targetRegion = Rectangle.Intersect(targetRegion, target.GetBounds());
 
             if (srcRegion.Width == 0 || srcRegion.Height == 0 || targetRegion.Width == 0 || targetRegion.Height == 0)
@@ -569,17 +577,12 @@ namespace AuroraLib.Pixel.Processing
             if (!Matrix3x2.Invert(transform, out Matrix3x2 inverse))
                 return;
 
-            if (transform.IsIdentity)
-            {
-                var size = new Size(Math.Min(targetRegion.Width, srcRegion.Width), Math.Min(targetRegion.Height, srcRegion.Height));
-                target.CopyFrom(source, new Rectangle(srcRegion.Location, size), targetRegion.Location, blendMode, intensity);
-                return;
-            }
-
             if (ReferenceEquals(source, target) && srcRegion.IntersectsWith(targetRegion))
             {
                 using var buffer = new MemoryImage<TColorT>(srcRegion.Width, srcRegion.Height);
                 buffer.CopyFrom(source, srcRegion);
+
+                transform = Matrix3x2.CreateTranslation(srcRegion.X, srcRegion.Y) * transform;
                 Transform(target, buffer, targetRegion, transform, resampler, blendMode, intensity);
                 return;
             }
@@ -597,8 +600,8 @@ namespace AuroraLib.Pixel.Processing
                         Vector2 sourcePos = Vector2.Transform(targetPos, inverse);
                         sourcePos -= new Vector2(0.5f);
 
-                        int sourceX = (int)Math.Floor(sourcePos.X + 0.5f);
-                        int sourceY = (int)Math.Floor(sourcePos.Y + 0.5f);
+                        int sourceX = Floor(sourcePos.X + 0.5f);
+                        int sourceY = Floor(sourcePos.Y + 0.5f);
 
                         if ((uint)(sourceX - srcRegion.X) >= (uint)srcRegion.Width || (uint)(sourceY - srcRegion.Y) >= (uint)srcRegion.Height)
                             continue;
@@ -633,11 +636,11 @@ namespace AuroraLib.Pixel.Processing
 
                         // Convert back to source pixel-center coordinates.
                         sourcePos -= new Vector2(0.5f);
-                        int startX = Math.Max(srcRegion.X, (int)Math.Ceiling(sourcePos.X - radius));
-                        int endX = Math.Min(srcRegion.Right - 1, (int)Math.Floor(sourcePos.X + radius));
+                        int startX = Math.Max(srcRegion.X, Ceiling(sourcePos.X - radius));
+                        int endX = Math.Min(srcRegion.Right - 1, Floor(sourcePos.X + radius));
 
-                        int startY = Math.Max(srcRegion.Y, (int)Math.Ceiling(sourcePos.Y - radius));
-                        int endY = Math.Min(srcRegion.Bottom - 1, (int)Math.Floor(sourcePos.Y + radius));
+                        int startY = Math.Max(srcRegion.Y, Ceiling(sourcePos.Y - radius));
+                        int endY = Math.Min(srcRegion.Bottom - 1, Floor(sourcePos.Y + radius));
 
                         Vector4 result = Vector4.Zero;
                         float weightSum = 0;
@@ -673,6 +676,38 @@ namespace AuroraLib.Pixel.Processing
                         targetPixel[y] = targetRow;
                 }
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int Ceiling(float x)
+#if NET6_0_OR_GREATER
+            => (int)MathF.Ceiling(x);
+#else
+            => (int)Math.Ceiling(x);
+#endif
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int Floor(float x)
+#if NET6_0_OR_GREATER
+            => (int)MathF.Floor(x);
+#else
+            => (int)Math.Floor(x);
+#endif
+
+        private static Rectangle TransformBounds(Rectangle region, Matrix3x2 transform)
+        {
+            Vector2 p1 = Vector2.Transform(new Vector2(region.Left, region.Top), transform);
+            Vector2 p2 = Vector2.Transform(new Vector2(region.Right, region.Top), transform);
+            Vector2 p3 = Vector2.Transform(new Vector2(region.Left, region.Bottom), transform);
+            Vector2 p4 = Vector2.Transform(new Vector2(region.Right, region.Bottom), transform);
+            
+            float left = Math.Min(Math.Min(p1.X, p2.X), Math.Min(p3.X, p4.X));
+            float top = Math.Min(Math.Min(p1.Y, p2.Y), Math.Min(p3.Y, p4.Y));
+
+            float right = Math.Max(Math.Max(p1.X, p2.X), Math.Max(p3.X, p4.X));
+            float bottom = Math.Max(Math.Max(p1.Y, p2.Y), Math.Max(p3.Y, p4.Y));
+
+            return Rectangle.FromLTRB(Floor(left), Floor(top), Ceiling(right), Ceiling(bottom));
         }
 
         /// <inheritdoc cref="Transform{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, Matrix3x2, IResampler?, BlendModes.BlendFunction?, float)"/>
