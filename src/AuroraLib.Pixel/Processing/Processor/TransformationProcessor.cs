@@ -40,13 +40,14 @@ namespace AuroraLib.Pixel.Processing.Processor
             Intensity = intensity;
         }
 
-        public TransformationProcessor(IReadOnlyImage sourceImage, Rectangle region, float scale, float rotationDegrees = 0, IResampler? resampler = null, BlendModes.BlendFunction? mode = null, float intensity = 1f) : this(sourceImage, region, CreateTransform(scale, rotationDegrees, new Vector2(region.Width / 2f, region.Height / 2f)), resampler, mode, intensity)
+        public TransformationProcessor(IReadOnlyImage sourceImage, Rectangle region, Vector2 scale, Vector2 positio = default, float rotationDegrees = 0, IResampler? resampler = null, BlendModes.BlendFunction? mode = null, float intensity = 1f) : this(sourceImage, region, CreateTransform(scale, positio, rotationDegrees, new Vector2(region.Width / 2f, region.Height / 2f)), resampler, mode, intensity)
         { }
 
-        private static Matrix3x2 CreateTransform(float scale, float rotationDegrees, Vector2 center)
+        private static Matrix3x2 CreateTransform(Vector2 scale, Vector2 position, float rotationDegrees, Vector2 center)
         {
             Matrix3x2 transform = Matrix3x2.CreateScale(scale, center);
             transform *= Matrix3x2.CreateRotation(rotationDegrees * ((float)Math.PI / 180f), center);
+            transform *= Matrix3x2.CreateTranslation(position);
             return transform;
         }
 

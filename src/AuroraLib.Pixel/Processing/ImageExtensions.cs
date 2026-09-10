@@ -786,7 +786,7 @@ namespace AuroraLib.Pixel.Processing
         public static void Transform(this IImage target, IReadOnlyImage source, Matrix3x2 transform, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
             => target.Apply(new TransformationProcessor(source, source.GetBounds(), transform, resampler, blendMode, intensity), target.GetBounds());
 
-
+        /// <inheritdoc cref="Transform{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, Matrix3x2, IResampler?, BlendModes.BlendFunction?, float)"/>
         public static void Transform(this IImage target, IReadOnlyImage source, Rectangle region, Vector2 scale, Vector2 position = default, float rotationDegrees = 0, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
             => target.Apply(new TransformationProcessor(source, region, scale, position, rotationDegrees, resampler, blendMode, intensity), target.GetBounds());
     }
