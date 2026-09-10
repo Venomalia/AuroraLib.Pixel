@@ -1,4 +1,5 @@
 ﻿using AuroraLib.Pixel.Image;
+using AuroraLib.Pixel.PixelFormats;
 using AuroraLib.Pixel.PixelProcessor;
 using System;
 using System.Drawing;
@@ -26,6 +27,11 @@ namespace AuroraLib.Pixel.Processing.Processor
             Color = color;
             BlendFunction = blendMode;
         }
+
+        public FillProcessor(IColor color, BlendModes.BlendFunction? blendMode = null) : this(color.ToScaledVector4(), blendMode)
+        { }
+        public FillProcessor(Color color, BlendModes.BlendFunction? blendMode = null) : this(((RGBA<byte>)color).ToScaledVector4(), blendMode)
+        { }
 
         /// <inheritdoc/>
         public void Apply<TColor>(IImage<TColor> image, Rectangle region) where TColor : unmanaged, IColor<TColor>
