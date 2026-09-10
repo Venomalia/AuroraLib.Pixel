@@ -194,6 +194,60 @@ namespace AuroraLib.Pixel.Processing
             => target.Apply(new CopyRegionProcessor(source, blendMode, intensity), target.GetBounds());
 
         /// <summary>
+        /// Copies pixels from the source image to the target image using a mask.
+        /// </summary>
+        /// <typeparam name="TColorT">The target image color type.</typeparam>
+        /// <typeparam name="TColorS">The source image color type.</typeparam>
+        /// <typeparam name="TColorM">The mask image color type.</typeparam>
+        /// <param name="target">The image to copy pixels to.</param>
+        /// <param name="source">The image to copy pixels from.</param>
+        /// <param name="mask">The image used to control the blend.</param>
+        /// <param name="srcRegion">The region of the source image to copy.</param>
+        /// <param name="targetCoordinate">The target position where the source region is copied.</param>
+        /// <param name="maskCoordinate">The mask position corresponding to the target region.</param>
+        /// <param name="blendMode">The blend function used to combine source and target pixels.</param>
+        public static void CopyFrom<TColorT, TColorS, TColorM>(this IImage<TColorT> target, IReadOnlyImage<TColorS> source, IReadOnlyImage<TColorM> mask, Rectangle srcRegion, Point targetCoordinate, Point maskCoordinate, BlendModes.BlendFunction blendMode)
+
+            where TColorT : unmanaged, IColor<TColorT> where TColorS : unmanaged, IColor<TColorS> where TColorM : unmanaged, IColor<TColorM>
+        {
+            if (!source.GetBounds().Contains(srcRegion))
+                throw new ArgumentOutOfRangeException(nameof(srcRegion), "Region exceeds source image bounds.");
+
+            Rectangle targetRegion = new Rectangle(targetCoordinate, srcRegion.Size);
+            ClipRegions(target.GetBounds(), ref srcRegion, ref targetRegion);
+            targetCoordinate = targetRegion.Location;
+
+            Rectangle maskRegion = new Rectangle(maskCoordinate, srcRegion.Size);
+            ClipRegions(mask.GetBounds(), ref srcRegion, ref maskRegion);
+            maskCoordinate = maskRegion.Location;
+
+            if (srcRegion.Width == 0 || srcRegion.Height == 0)
+                return;
+
+            RowAccessor<TColorT> targetPixel = new RowAccessor<TColorT>(target, targetCoordinate.X, srcRegion.Width);
+            ReadOnlyRowAccessor<TColorS> sourcePixel = new ReadOnlyRowAccessor<TColorS>(source, srcRegion.X, srcRegion.Width);
+            ReadOnlyRowAccessor<TColorM> maskPixel = new ReadOnlyRowAccessor<TColorM>(mask, maskCoordinate.X, srcRegion.Width);
+
+            for (int y = 0; y < srcRegion.Height; y++)
+            {
+                Span<TColorT> targetRow = targetPixel[targetCoordinate.Y + y];
+                ReadOnlySpan<TColorS> sourceRow = sourcePixel[srcRegion.Y + y];
+                ReadOnlySpan<TColorM> maskRow = maskPixel[maskCoordinate.Y + y];
+
+                targetRow.Blend(sourceRow, maskRow, blendMode);
+
+                if (targetPixel.IsBuffered)
+                {
+                    targetPixel[srcRegion.Y + y] = targetRow;
+                }
+            }
+        }
+
+        /// <inheritdoc cref="CopyFrom{TColorT, TColorS, TColorM}(IImage{TColorT}, IReadOnlyImage{TColorS}, IReadOnlyImage{TColorM}, Rectangle, Point, Point, BlendModes.BlendFunction)"/>
+        public static void CopyFrom(this IImage target, IReadOnlyImage source, IReadOnlyImage mask, Rectangle srcRegion, Point targetCoordinate, Point maskCoordinate, BlendModes.BlendFunction blendMode)
+            => target.Apply(new CopyRegionMaskProcessor(source, mask, srcRegion, maskCoordinate, blendMode), new Rectangle(targetCoordinate, new Size(source.Width, source.Height)));
+
+        /// <summary>
         /// Mirrors the <paramref name="image"/> along the specified axis within a given <paramref name="region"/>.
         /// </summary>
         /// <typeparam name="TColor">The color type of the image.</typeparam>
@@ -700,7 +754,7 @@ namespace AuroraLib.Pixel.Processing
             Vector2 p2 = Vector2.Transform(new Vector2(region.Right, region.Top), transform);
             Vector2 p3 = Vector2.Transform(new Vector2(region.Left, region.Bottom), transform);
             Vector2 p4 = Vector2.Transform(new Vector2(region.Right, region.Bottom), transform);
-            
+
             float left = Math.Min(Math.Min(p1.X, p2.X), Math.Min(p3.X, p4.X));
             float top = Math.Min(Math.Min(p1.Y, p2.Y), Math.Min(p3.Y, p4.Y));
 
@@ -731,5 +785,9 @@ namespace AuroraLib.Pixel.Processing
         /// <inheritdoc cref="Transform{TColorT, TColorS}(IImage{TColorT}, IReadOnlyImage{TColorS}, Rectangle, Rectangle, Matrix3x2, IResampler?, BlendModes.BlendFunction?, float)"/>
         public static void Transform(this IImage target, IReadOnlyImage source, Matrix3x2 transform, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
             => target.Apply(new TransformationProcessor(source, source.GetBounds(), transform, resampler, blendMode, intensity), target.GetBounds());
+
+
+        public static void Transform(this IImage target, IReadOnlyImage source, Rectangle region, Vector2 scale, Vector2 position = default, float rotationDegrees = 0, IResampler? resampler = null, BlendModes.BlendFunction? blendMode = null, float intensity = 1f)
+            => target.Apply(new TransformationProcessor(source, region, scale, position, rotationDegrees, resampler, blendMode, intensity), target.GetBounds());
     }
 }
