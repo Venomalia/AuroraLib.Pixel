@@ -642,31 +642,36 @@ namespace AuroraLib.Pixel.Processing
             }
 
             RowAccessor<TColorT> targetPixel = new RowAccessor<TColorT>(target, targetRegion.X, targetRegion.Width);
+            Vector2 sourcePos = Vector2.Transform(new Vector2(targetRegion.Left + 0.5f, targetRegion.Top + 0.5f), inverse);
             if (resampler is NearestNeighborResampler)
             {
                 for (int y = targetRegion.Top; y < targetRegion.Bottom; y++)
                 {
                     Span<TColorT> targetRow = targetPixel[y];
+                    Vector2 rowSourcePos = sourcePos;
 
                     for (int x = targetRegion.Left; x < targetRegion.Right; x++)
                     {
-                        Vector2 targetPos = new Vector2(x + 0.5f, y + 0.5f);
-                        Vector2 sourcePos = Vector2.Transform(targetPos, inverse);
-                        sourcePos -= new Vector2(0.5f);
+                        int sourceX = Floor(rowSourcePos.X);
+                        int sourceY = Floor(rowSourcePos.Y);
 
-                        int sourceX = Floor(sourcePos.X + 0.5f);
-                        int sourceY = Floor(sourcePos.Y + 0.5f);
+                        if ((uint)(sourceX - srcRegion.X) < (uint)srcRegion.Width &&
+                            (uint)(sourceY - srcRegion.Y) < (uint)srcRegion.Height)
+                        {
+                            TColorS sourceColor = source[sourceX, sourceY];
 
-                        if ((uint)(sourceX - srcRegion.X) >= (uint)srcRegion.Width || (uint)(sourceY - srcRegion.Y) >= (uint)srcRegion.Height)
-                            continue;
+                            if (blendMode is null)
+                                targetRow[x - targetRegion.X].From(sourceColor);
+                            else
+                                targetRow[x - targetRegion.X].Blend(sourceColor, blendMode, intensity);
+                        }
 
-                        TColorS sourceColor = source[sourceX, sourceY];
-
-                        if (blendMode is null)
-                            targetRow[x - targetRegion.X].From(sourceColor);
-                        else
-                            targetRow[x - targetRegion.X].Blend(sourceColor, blendMode, intensity);
+                        rowSourcePos.X += inverse.M11;
+                        rowSourcePos.Y += inverse.M12;
                     }
+
+                    sourcePos.X += inverse.M21;
+                    sourcePos.Y += inverse.M22;
 
                     if (targetPixel.IsBuffered)
                         targetPixel[y] = targetRow;
@@ -676,55 +681,58 @@ namespace AuroraLib.Pixel.Processing
             {
                 float radius = resampler.Radius;
                 ReadOnlyRowAccessor<TColorS> sourcePixel = new ReadOnlyRowAccessor<TColorS>(source, srcRegion.X, srcRegion.Width);
+                // Convert to source pixel coordinates once.
+                sourcePos -= new Vector2(0.5f);
                 for (int y = targetRegion.Top; y < targetRegion.Bottom; y++)
                 {
                     Span<TColorT> targetRow = targetPixel[y];
+                    Vector2 rowSourcePos = sourcePos;
 
                     for (int x = targetRegion.Left; x < targetRegion.Right; x++)
                     {
-                        // Target pixel center.
-                        Vector2 targetPos = new Vector2(x + 0.5f, y + 0.5f);
+                        int startX = Math.Max(srcRegion.X, Ceiling(rowSourcePos.X - radius));
+                        int endX = Math.Min(srcRegion.Right - 1, Floor(rowSourcePos.X + radius));
 
-                        // Find where this target pixel came from in the source.
-                        Vector2 sourcePos = Vector2.Transform(targetPos, inverse);
-
-                        // Convert back to source pixel-center coordinates.
-                        sourcePos -= new Vector2(0.5f);
-                        int startX = Math.Max(srcRegion.X, Ceiling(sourcePos.X - radius));
-                        int endX = Math.Min(srcRegion.Right - 1, Floor(sourcePos.X + radius));
-
-                        int startY = Math.Max(srcRegion.Y, Ceiling(sourcePos.Y - radius));
-                        int endY = Math.Min(srcRegion.Bottom - 1, Floor(sourcePos.Y + radius));
+                        int startY = Math.Max(srcRegion.Y, Ceiling(rowSourcePos.Y - radius));
+                        int endY = Math.Min(srcRegion.Bottom - 1, Floor(rowSourcePos.Y + radius));
 
                         Vector4 result = Vector4.Zero;
                         float weightSum = 0;
 
                         for (int sy = startY; sy <= endY; sy++)
                         {
-                            float weightY = resampler.GetWeight(sy - sourcePos.Y);
+                            float weightY = resampler.GetWeight(sy - rowSourcePos.Y);
                             ReadOnlySpan<TColorS> sourceRow = sourcePixel[sy];
 
                             for (int sx = startX; sx <= endX; sx++)
                             {
-                                float weight = resampler.GetWeight(sx - sourcePos.X) * weightY;
+                                float weight = resampler.GetWeight(sx - rowSourcePos.X) * weightY;
 
                                 result += sourceRow[sx].ToScaledVector4() * weight;
                                 weightSum += weight;
                             }
                         }
 
-                        if (weightSum <= 0)
-                            continue;
+                        if (weightSum > 0)
+                        {
+                            result /= weightSum;
+                            result = Vector4.Clamp(result, Vector4.Zero, Vector4.One);
 
-                        result /= weightSum;
+                            if (blendMode is null)
+                                targetRow[x - targetRegion.X].FromScaledVector4(result);
+                            else
+                                targetRow[x - targetRegion.X].FromScaledVector4(
+                                    blendMode(
+                                        targetRow[x - targetRegion.X].ToScaledVector4(),
+                                        result,
+                                        intensity));
+                        }
 
-                        result = Vector4.Clamp(result, Vector4.Zero, Vector4.One);
-
-                        if (blendMode is null)
-                            targetRow[x - targetRegion.X].FromScaledVector4(result);
-                        else
-                            targetRow[x - targetRegion.X].FromScaledVector4(blendMode(targetRow[x - targetRegion.X].ToScaledVector4(), result, intensity));
+                        rowSourcePos.X += inverse.M11;
+                        rowSourcePos.Y += inverse.M12;
                     }
+                    sourcePos.X += inverse.M21;
+                    sourcePos.Y += inverse.M22;
 
                     if (targetPixel.IsBuffered)
                         targetPixel[y] = targetRow;
