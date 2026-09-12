@@ -101,6 +101,12 @@ namespace AuroraLib.Pixel.PixelProcessor
             return AlphaBlend(baseColor, blendedColor, blendColor.W * intensity);
         }
 
+        /// <summary>
+        /// Blends the color behind the base color using normal blending.
+        /// </summary>
+        public static Vector4 Background(Vector4 baseColor, Vector4 blendColor, float intensity)
+            => BlendModes.Normal(blendColor, baseColor, intensity);
+
         private static Vector4 AlphaBlend(Vector4 baseColor, Vector4 blendColor, float intensity)
         {
             Vector4 blendedColor = Vector4.Lerp(baseColor, blendColor, intensity);

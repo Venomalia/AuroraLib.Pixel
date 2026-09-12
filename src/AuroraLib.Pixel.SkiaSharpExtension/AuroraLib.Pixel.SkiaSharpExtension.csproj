@@ -6,7 +6,7 @@
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<Title>AuroraLib.Pixel.SkiaSharpExtension</Title>
-		<Version>1.5.3</Version>
+		<Version>1.5.4</Version>
 		<AssemblyVersion>$(Version)</AssemblyVersion>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
@@ -42,7 +42,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="SkiaSharp" Version="4.150.1" />
+	  <PackageReference Include="SkiaSharp" Version="4.152.0" />
 	</ItemGroup>
 
 	<ItemGroup>
